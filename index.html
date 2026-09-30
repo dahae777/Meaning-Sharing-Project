@@ -98,7 +98,7 @@
                             <div class="absolute top-0 left-0 w-1 h-full bg-indigo-400"></div>
                             <h3 class="text-xs font-bold text-slate-700 mb-2">#1컷 (발단)</h3>
                             <div class="space-y-2">
-                                <input type="text" id="scene1" required placeholder="상황(맥락): 예) 산더미처럼 쌓인 영수증" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs focus:ring-1 focus:ring-indigo-400 outline-none placeholder-slate-400">
+                                <input type="text" id="scene1" required placeholder="상황(맥락): 예) 산더미 같은 영수증을 들고 땀을 뻘뻘 흘리며 멘붕에 빠진 직장인" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs focus:ring-1 focus:ring-indigo-400 outline-none placeholder-slate-400">
                                 <textarea id="dialogue1" required placeholder="대사: 하아... 이 영수증들 언제 다 처리하지?" rows="2" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs focus:ring-1 focus:ring-indigo-400 outline-none resize-none placeholder-slate-400"></textarea>
                             </div>
                         </div>
@@ -523,7 +523,7 @@ const GAS_URL = 'https://script.google.com/macros/s/AKfycbzxmjWy8Md4tiDNXpe1NumO
         }
 
        async function generateImageWithRetry(userPrompt, maxRetries = 3) {
-            const stylePrompt = "Cute corporate webtoon illustration style, flat colors, clean lines, simple office background, highly detailed comic panel. NO TEXT, NO WORDS, NO SPEECH BUBBLES. Situation: ";
+           const stylePrompt = "Masterpiece, highly detailed Korean modern corporate webtoon illustration, vibrant flat colors, extremely clean and professional lines, dynamic and exaggerated expressive character emotions, realistic modern office background, highly polished comic panel. NO TEXT, NO WORDS, NO SPEECH BUBBLES. Situation: ";
             const fullPrompt = stylePrompt + userPrompt;
 
             const payload = {
