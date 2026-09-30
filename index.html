@@ -38,6 +38,7 @@
             white-space: normal;
         }
     </style>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 </head>
 <body class="flex flex-col min-h-full text-slate-800 pb-20 selection:bg-indigo-100">
 
@@ -484,19 +485,62 @@
             }
         });
 
-        function publishToGallery() {
-            if(!generatedComicHTML) return;
+        // 💡 파워 오토메이트로 데이터를 쏘는 새로운 함수
+function publishToGallery() {
+    const comicElement = document.getElementById('comicGrid');
+    const title = document.getElementById('webtoonTitle').value.trim() || '비하인드씬';
+    const team = document.getElementById('teamName').value;
+    const author = document.getElementById('authorName').value.trim();
 
-            const gallery = document.getElementById('galleryGrid');
-            const emptyMsg = document.getElementById('emptyGalleryMsg');
-            if(emptyMsg) emptyMsg.style.display = 'none';
+    // 복사해둔 파워 오토메이트 URL을 아래 따옴표 안에 꼭 넣어주세요!
+    const POWER_AUTOMATE_URL = "https://defaultf8d5ac988fa943558cd984f322fb0a.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/11/workflows/8fdff1b1f0914475ad179f60b5297392/triggers/manual/paths/invoke?api-version=1";
 
-            gallery.insertAdjacentHTML('afterbegin', generatedComicHTML);
-            
-            if (pendingSubmissionTeam) {
-                participatedTeams.add(pendingSubmissionTeam);
-                renderParticipationModal(); 
+    showMessage("쉐어포인트 갤러리로 전송 중입니다... 잠시만 기다려주세요.");
+    document.getElementById('publishBtn').disabled = true;
+
+    // 1. html2canvas로 완성된 4컷 만화 영역을 고화질 캡처
+    html2canvas(comicElement, { scale: 2, backgroundColor: '#f8fafc' }).then(async canvas => {
+        // 2. Base64 텍스트 데이터 추출 (앞의 불필요한 헤더 부분 제거)
+        const fullDataUrl = canvas.toDataURL('image/png');
+        const base64Data = fullDataUrl.split(',')[1];
+
+        // 3. 파워 오토메이트로 보낼 택배 상자(JSON) 포장
+        const payload = {
+            title: title,
+            team: team,
+            author: author,
+            imageB64: base64Data
+        };
+
+        try {
+            // 4. 파워 오토메이트로 슝!
+            const response = await fetch(POWER_AUTOMATE_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                showMessage("사내 갤러리에 성공적으로 전시되었습니다! 🎉");
+                
+                // UI 초기화 로직
+                document.getElementById('comicForm').reset();
+                document.getElementById('teamName').selectedIndex = 0;
+                document.getElementById('comicGrid').classList.add('hidden');
+                document.getElementById('comicGrid').classList.remove('flex');
+                document.getElementById('emptyState').classList.remove('hidden');
+                document.getElementById('publishBtn').classList.add('hidden');
+            } else {
+                throw new Error("서버 응답 오류");
             }
+        } catch (error) {
+            console.error(error);
+            showMessage("전송 중 오류가 발생했습니다. 파워 오토메이트 URL을 확인해주세요.", "error");
+        } finally {
+            document.getElementById('publishBtn').disabled = false;
+        }
+    });
+}
 
             document.getElementById('comicForm').reset();
             document.getElementById('teamName').selectedIndex = 0;
