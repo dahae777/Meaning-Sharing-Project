@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="ko" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>우리 팀 4컷 만화 비하인드 씬</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Noto Sans KR', 'sans-serif'],
+                        comic: ['Jua', 'sans-serif'],
+                    },
+                    animation: {
+                        'bounce-slight': 'bounce 2s infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body { font-family: 'Noto Sans KR', sans-serif; }
+        .comic-font { font-family: 'Jua', sans-serif; }
+        
+        /* 로딩 오버레이 블러 효과 */
+        #loadingOverlay { backdrop-filter: blur(4px); }
+        
+        /* 긴 단어도 줄바꿈 되도록 강제 설정 */
+        .break-keep-words {
+            word-break: break-all;
+            white-space: normal;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-full text-slate-800 pb-20 selection:bg-indigo-100">
+
+    <header class="bg-white border-b border-indigo-100 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center text-white text-2xl shadow-md">
+                    <i class="fa-solid fa-book-open"></i>
+                </div>
+                <div>
+                    <h1 class="comic-font text-2xl text-indigo-900 tracking-tight">우리 팀 4컷 만화 비하인드 씬</h1>
+                    <p class="text-xs text-slate-500 font-medium">경영지원본부 일의 의미 찾기 프로젝트</p>
+                </div>
+            </div>
+            
+            <button onclick="openParticipationModal()" class="bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 font-bold py-2 px-4 rounded-full shadow-sm transition-colors flex items-center gap-2">
+                <i class="fa-solid fa-chart-pie text-indigo-500"></i> 조직 참여 현황
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <section class="lg:col-span-5 flex flex-col space-y-6">
+            <div class="bg-white rounded-2xl shadow-lg border border-slate-100 p-6">
+                <div class="mb-5 pb-4 border-b border-slate-100">
+                    <h2 class="comic-font text-xl text-indigo-900 flex items-center gap-2">
+                        <i class="fa-solid fa-pen-to-square text-indigo-500"></i> 콘티 작성하기
+                    </h2>
+                    <p class="text-xs text-slate-500 mt-1">상황은 간결하게, 대사는 유쾌하게 적어주세요!</p>
+                </div>
+
+                <form id="comicForm" class="space-y-6">
+                    <!-- Title, Team and Name -->
+                    <div class="bg-indigo-50/50 p-4 rounded-xl border border-indigo-100 space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">웹툰 제목 <span class="text-rose-500">*</span></label>
+                            <input type="text" id="webtoonTitle" required placeholder="예: 영수증과의 전쟁, 엑셀이 멈춘 날" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm font-bold text-indigo-900 focus:ring-2 focus:ring-indigo-500 outline-none placeholder-slate-400">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 mb-1">소속 팀명 <span class="text-rose-500">*</span></label>
+                                <select id="teamName" required class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none appearance-none cursor-pointer">
+                                    <option value="" disabled selected>팀을 선택하세요</option>
+                                    <!-- Options populated by JS -->
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 mb-1">작성자 이름 <span class="text-rose-500">*</span></label>
+                                <input type="text" id="authorName" required placeholder="예: 이다해" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <!-- Panel 1 -->
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+                            <div class="absolute top-0 left-0 w-1 h-full bg-indigo-400"></div>
+                            <h3 class="text-xs font-bold text-slate-700 mb-2">#1컷 (발단)</h3>
+                            <div class="space-y-2">
+                                <input type="text" id="scene1" required placeholder="상황(맥락): 예) 산더미처럼 쌓인 영수증" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs focus:ring-1 focus:ring-indigo-400 outline-none placeholder-slate-400">
+                                <textarea id="dialogue1" required placeholder="대사: 하아... 이 영수증들 언제 다 처리하지?" rows="2" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs focus:ring-1 focus:ring-indigo-400 outline-none resize-none placeholder-slate-400"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Panel 2 -->
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+                            <div class="absolute top-0 left-0 w-1 h-full bg-indigo-400"></div>
+                            <h3 class="text-xs font-bold text-slate-700 mb-2">#2컷 (전개)</h3>
+                            <div class="space-y-2">
+                                <input type="text" id="scene2" required placeholder="상황(맥락): 예) 불꽃튀는 눈빛으로 폭풍 타이핑" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs focus:ring-1 focus:ring-indigo-400 outline-none placeholder-slate-400">
+                                <textarea id="dialogue2" required placeholder="대사: 타타타타탁! 스피드가 생명이다!" rows="2" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs focus:ring-1 focus:ring-indigo-400 outline-none resize-none placeholder-slate-400"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Panel 3 -->
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+                            <div class="absolute top-0 left-0 w-1 h-full bg-indigo-400"></div>
+                            <h3 class="text-xs font-bold text-slate-700 mb-2">#3컷 (위기/유머)</h3>
+                            <div class="space-y-2">
+                                <input type="text" id="scene3" required placeholder="상황(맥락): 예) 모니터 에러창을 보고 절망하는 표정" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs focus:ring-1 focus:ring-indigo-400 outline-none placeholder-slate-400">
+                                <textarea id="dialogue3" required placeholder="대사: 앗! 저장 안 했는데 날아갔어!!!" rows="2" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs focus:ring-1 focus:ring-indigo-400 outline-none resize-none placeholder-slate-400"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Panel 4 -->
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+                            <div class="absolute top-0 left-0 w-1 h-full bg-indigo-400"></div>
+                            <h3 class="text-xs font-bold text-slate-700 mb-2">#4컷 (결말)</h3>
+                            <div class="space-y-2">
+                                <input type="text" id="scene4" required placeholder="상황(맥락): 예) 결국 문서를 완성하고 후광이 비치는 모습" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs focus:ring-1 focus:ring-indigo-400 outline-none placeholder-slate-400">
+                                <textarea id="dialogue4" required placeholder="대사: 드디어 마감 완료! 오늘도 해냈다!" rows="2" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs focus:ring-1 focus:ring-indigo-400 outline-none resize-none placeholder-slate-400"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="generateBtn" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 transform active:scale-[0.98]">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> AI로 4컷 만화 생성하기
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <section class="lg:col-span-7 flex flex-col space-y-4">
+            <div class="bg-white rounded-2xl shadow-lg border border-slate-100 p-6 h-full flex flex-col relative">
+                <div class="flex justify-between items-center mb-4 pb-4 border-b border-slate-100">
+                    <h2 class="comic-font text-xl text-indigo-900 flex items-center gap-2">
+                        <i class="fa-regular fa-image text-indigo-500"></i> 결과물 미리보기
+                    </h2>
+                    <button id="publishBtn" onclick="publishToGallery()" class="hidden bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold py-2 px-4 rounded-lg shadow transition-all transform active:scale-[0.98]">
+                        <i class="fa-solid fa-check"></i> 갤러리에 전시하기
+                    </button>
+                </div>
+
+                <div id="previewArea" class="flex-grow flex items-center justify-center bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl relative overflow-hidden min-h-[500px] p-2 md:p-6">
+                    
+                    <!-- Empty State -->
+                    <div id="emptyState" class="text-center text-slate-400 p-6">
+                        <i class="fa-regular fa-face-smile-wink text-5xl mb-3 text-slate-300"></i>
+                        <p class="font-medium">좌측 폼을 작성하고 생성 버튼을 누르면<br>여기에 멋진 4컷 만화가 완성됩니다!</p>
+                    </div>
+
+                    <div id="comicGrid" class="hidden w-full h-full flex-col items-center">
+                        <div class="text-center mb-5">
+                            <h3 id="previewTitle" class="comic-font text-2xl text-slate-800 mb-3 break-keep-words"></h3>
+                            <div class="flex items-center justify-center gap-2 mb-2">
+                                <span id="previewTeamLabel" class="bg-indigo-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm"></span>
+                                <span id="previewAuthorLabel" class="bg-slate-200 text-slate-700 text-xs font-bold px-3 py-1 rounded-full shadow-sm"></span>
+                            </div>
+                        </div>
+                        
+                        <!-- Preview panels with flex layout (NO TRUNCATION) -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 w-full max-w-2xl mx-auto bg-slate-800 p-3 md:p-4 rounded-xl shadow-2xl">
+                            
+                            <script>
+                                for(let i=1; i<=4; i++) {
+                                    document.write(`
+                                    <div class="flex flex-col bg-white rounded-lg border-2 border-slate-700 shadow-inner h-full">
+                                        <!-- Top: Situation (Flex to allow expansion) -->
+                                        <div class="bg-indigo-50/80 border-b border-indigo-100 p-2 relative flex items-center min-h-[2.5rem] h-auto">
+                                            <span class="absolute top-2 left-2 bg-amber-400 text-slate-900 text-[10px] font-black px-1.5 py-0.5 rounded-sm border border-slate-800 leading-none">#${i}</span>
+                                            <span id="preview-scene-${i}" class="text-xs font-bold text-indigo-900 text-center w-full break-keep-words pl-8 pr-2"></span>
+                                        </div>
+                                        
+                                        <!-- Middle: Image -->
+                                        <div class="w-full bg-slate-200">
+                                            <img id="preview-img-${i}" class="w-full h-auto aspect-square object-cover block" src="" alt="panel ${i}">
+                                        </div>
+                                        
+                                        <!-- Bottom: Dialogue (Flex-grow to fill remaining space, completely visible) -->
+                                        <div class="p-3 border-t border-slate-100 bg-white h-auto flex-grow flex items-center justify-center">
+                                            <p id="preview-dialogue-${i}" class="comic-font text-sm text-slate-800 text-center break-keep-words w-full"></p>
+                                        </div>
+                                    </div>
+                                    `);
+                                }
+                            </script>
+                        </div>
+                    </div>
+
+                    <div id="loadingOverlay" class="absolute inset-0 bg-white/90 z-20 hidden flex-col items-center justify-center">
+                        <div class="relative">
+                            <i class="fa-solid fa-wand-magic-sparkles text-5xl text-indigo-500 animate-bounce mb-4 absolute -left-12 -top-4 opacity-50"></i>
+                            <i class="fa-solid fa-palette text-6xl text-purple-600 animate-pulse mb-6"></i>
+                        </div>
+                        <p class="comic-font text-xl text-indigo-900 mb-1">AI 작가가 열심히 스케치하는 중...</p>
+                        <p class="text-sm text-slate-500 font-medium bg-slate-100 px-4 py-1 rounded-full">각 컷을 렌더링하느라 약 10~15초 소요됩니다.</p>
+                        <div class="mt-6 flex space-x-3">
+                            <div class="w-3 h-3 bg-indigo-500 rounded-full animate-bounce"></div>
+                            <div class="w-3 h-3 bg-purple-500 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+                            <div class="w-3 h-3 bg-pink-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <section class="lg:col-span-12 mt-4">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8">
+                <div class="flex justify-between items-end mb-6 pb-4 border-b border-slate-100">
+                    <div>
+                        <h2 class="comic-font text-2xl text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-images text-amber-500"></i> 사내 4컷 만화 갤러리
+                        </h2>
+                        <p class="text-sm text-slate-500 mt-1">동료들이 등록한 우리 부서의 진짜 이야기를 감상하고 하트를 남겨주세요!</p>
+                    </div>
+                </div>
+
+                <div id="galleryGrid" class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                    <!-- Gallery Items will be prepended here dynamically -->
+                    <div id="emptyGalleryMsg" class="col-span-full flex flex-col items-center justify-center text-slate-400 py-16 bg-slate-50 rounded-xl border-2 border-dashed border-slate-200">
+                        <i class="fa-regular fa-folder-open text-4xl mb-3"></i>
+                        <p class="font-medium">아직 전시된 작품이 없습니다.<br>첫 번째 작가가 되어주세요!</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="participationModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full mx-4 flex flex-col max-h-[80vh] overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <h3 class="comic-font text-2xl text-indigo-900 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-pie text-indigo-500"></i> 조직 참여 현황
+                </h3>
+                <button onclick="closeParticipationModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
+                    <i class="fa-solid fa-xmark text-2xl"></i>
+                </button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto bg-white flex-grow">
+                <!-- Participated Teams -->
+                <div class="mb-8">
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
+                        <h4 class="font-bold text-slate-800 text-lg">참여 완료 팀</h4>
+                        <span id="participatedCount" class="bg-emerald-100 text-emerald-800 text-xs font-bold px-2 py-0.5 rounded-full">0</span>
+                    </div>
+                    <div id="participatedList" class="flex flex-wrap gap-2">
+                        <p id="noParticipatedMsg" class="text-sm text-slate-400 w-full p-4 bg-slate-50 rounded-lg text-center border border-dashed border-slate-200">아직 참여한 팀이 없습니다.</p>
+                    </div>
+                </div>
+
+                <!-- Not Participated Teams -->
+                <div>
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="w-3 h-3 rounded-full bg-slate-300"></div>
+                        <h4 class="font-bold text-slate-800 text-lg">미참여 팀</h4>
+                        <span id="notParticipatedCount" class="bg-slate-100 text-slate-600 text-xs font-bold px-2 py-0.5 rounded-full">0</span>
+                    </div>
+                    <div id="notParticipatedList" class="flex flex-wrap gap-2">
+                        <!-- Badges injected by JS -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end">
+                <button onclick="closeParticipationModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="messageBox" class="fixed inset-0 z-[60] hidden items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity">
+        <div class="bg-white p-6 rounded-2xl shadow-2xl max-w-sm w-full mx-4 text-center">
+            <i id="msgIcon" class="fa-solid fa-circle-check text-4xl mb-4 text-emerald-500"></i>
+            <p id="msgText" class="text-slate-800 font-medium mb-6 text-lg break-keep-words"></p>
+            <button onclick="closeMessage()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl shadow transition-colors">확인</button>
+        </div>
+    </div>
+
+    <script>
+        const API_KEY = ""; 
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image:generateContent?key=${API_KEY}`;
+        
+        const allTeams = [
+            "K-SOX팀", "개인정보보호팀", "건축TF", "경영기획팀", "구매지원팀", 
+            "글로벌소싱팀", "노사기획팀", "노사협력팀", "대외협력팀", "법무팀", 
+            "영업관리팀", "인사기획팀", "인재문화팀", "인재확보팀", "재정팀", 
+            "총무팀", "커뮤니케이션팀", "컴플라이언스팀", "투자기획팀", "한국조달팀", "회계팀"
+        ];
+        
+        let participatedTeams = new Set();
+        let generatedComicHTML = ""; 
+        let pendingSubmissionTeam = "";
+
+        function initApp() {
+            const teamSelect = document.getElementById('teamName');
+            allTeams.sort().forEach(team => {
+                const option = document.createElement('option');
+                option.value = team;
+                option.textContent = team;
+                teamSelect.appendChild(option);
+            });
+            renderParticipationModal();
+        }
+
+        function renderParticipationModal() {
+            const participatedList = document.getElementById('participatedList');
+            const notParticipatedList = document.getElementById('notParticipatedList');
+            const noParticipatedMsg = document.getElementById('noParticipatedMsg');
+            
+            participatedList.innerHTML = '';
+            notParticipatedList.innerHTML = '';
+            
+            let pCount = 0, npCount = 0;
+
+            allTeams.sort().forEach(team => {
+                const badge = document.createElement('span');
+                if (participatedTeams.has(team)) {
+                    pCount++;
+                    badge.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-emerald-100 text-emerald-800 border border-emerald-200';
+                    badge.innerHTML = `<i class="fa-solid fa-check-circle text-emerald-500"></i> ${team}`;
+                    participatedList.appendChild(badge);
+                } else {
+                    npCount++;
+                    badge.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-slate-100 text-slate-600 border border-slate-200';
+                    badge.innerHTML = `<i class="fa-regular fa-clock text-slate-400"></i> ${team}`;
+                    notParticipatedList.appendChild(badge);
+                }
+            });
+
+            document.getElementById('participatedCount').textContent = pCount;
+            document.getElementById('notParticipatedCount').textContent = npCount;
+
+            if (pCount === 0) {
+                participatedList.appendChild(noParticipatedMsg);
+                noParticipatedMsg.style.display = 'block';
+            } else if (noParticipatedMsg) {
+                noParticipatedMsg.style.display = 'none';
+            }
+        }
+
+        function openParticipationModal() {
+            document.getElementById('participationModal').classList.remove('hidden');
+            document.getElementById('participationModal').classList.add('flex');
+            renderParticipationModal();
+        }
+
+        function closeParticipationModal() {
+            document.getElementById('participationModal').classList.add('hidden');
+            document.getElementById('participationModal').classList.remove('flex');
+        }
+
+        function showMessage(text, type = "success") {
+            const box = document.getElementById('messageBox');
+            const icon = document.getElementById('msgIcon');
+            document.getElementById('msgText').textContent = text;
+            
+            if(type === "error") {
+                icon.className = "fa-solid fa-circle-exclamation text-4xl mb-4 text-rose-500";
+            } else {
+                icon.className = "fa-solid fa-circle-check text-4xl mb-4 text-emerald-500";
+            }
+            
+            box.classList.remove('hidden');
+            box.classList.add('flex');
+        }
+
+        function closeMessage() {
+            document.getElementById('messageBox').classList.add('hidden');
+            document.getElementById('messageBox').classList.remove('flex');
+        }
+
+        function escapeHtml(text) {
+            if(!text) return "";
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        document.getElementById('comicForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const btn = document.getElementById('generateBtn');
+            const overlay = document.getElementById('loadingOverlay');
+            
+            const title = document.getElementById('webtoonTitle').value.trim();
+            const team = document.getElementById('teamName').value;
+            const author = document.getElementById('authorName').value.trim();
+            
+            if (!title) { showMessage("웹툰 제목을 입력해주세요.", "error"); return; }
+            if (!team) { showMessage("소속 팀을 선택해주세요.", "error"); return; }
+
+            const scenes = [], dialogues = [];
+            for(let i=1; i<=4; i++) {
+                scenes.push(document.getElementById(`scene${i}`).value.trim());
+                dialogues.push(document.getElementById(`dialogue${i}`).value.trim());
+            }
+
+            btn.disabled = true;
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+            document.getElementById('emptyState').classList.add('hidden');
+            document.getElementById('comicGrid').classList.add('hidden');
+            document.getElementById('publishBtn').classList.add('hidden');
+
+            try {
+                // 병렬로 이미지 생성 요청
+                const imagePromises = scenes.map(scene => generateImageWithRetry(scene));
+                const base64Images = await Promise.all(imagePromises);
+
+                // Preview 업데이트
+                document.getElementById('previewTitle').textContent = title;
+                document.getElementById('previewTeamLabel').textContent = team;
+                document.getElementById('previewAuthorLabel').innerHTML = `<i class="fa-solid fa-user-pen text-slate-400 mr-1"></i>${author}`;
+
+                for(let i=0; i<4; i++){
+                    document.getElementById(`preview-scene-${i+1}`).textContent = scenes[i];
+                    document.getElementById(`preview-img-${i+1}`).src = base64Images[i];
+                    document.getElementById(`preview-dialogue-${i+1}`).textContent = dialogues[i];
+                }
+
+                document.getElementById('comicGrid').classList.remove('hidden');
+                document.getElementById('comicGrid').classList.add('flex');
+                document.getElementById('publishBtn').classList.remove('hidden');
+
+                pendingSubmissionTeam = team;
+
+                generatedComicHTML = `
+                    <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 p-4 sm:p-6 flex flex-col">
+                        <div class="mb-5 text-center">
+                            <h3 class="comic-font text-xl sm:text-2xl text-slate-800 mb-3 break-keep-words">${escapeHtml(title)}</h3>
+                            <div class="flex items-center justify-center gap-2 flex-wrap">
+                                <span class="bg-indigo-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">${escapeHtml(team)}</span>
+                                <span class="bg-slate-100 text-slate-700 text-xs font-bold px-3 py-1 rounded-full border border-slate-200">
+                                    <i class="fa-solid fa-user-pen mr-1 text-slate-400"></i>${escapeHtml(author)}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <!-- Gallery Comic Grid: 텍스트 박스 유동적 높이 설정 -->
+                        <div class="grid grid-cols-2 gap-2 sm:gap-4 bg-slate-800 p-2 sm:p-4 rounded-xl shadow-inner flex-grow content-start">
+                            ${[0,1,2,3].map(i => `
+                                <div class="flex flex-col bg-white rounded-lg overflow-hidden border border-slate-600 h-full">
+                                    <div class="bg-indigo-50/80 border-b border-indigo-100 p-2 flex relative h-auto">
+                                        <span class="absolute top-1.5 left-1.5 bg-amber-400 text-slate-900 text-[9px] sm:text-[10px] font-black px-1.5 py-0.5 rounded-sm border border-slate-800 leading-none">#${i+1}</span>
+                                        <span class="text-[10px] sm:text-xs font-bold text-indigo-900 text-center w-full break-keep-words pl-5 sm:pl-6 pr-1">${escapeHtml(scenes[i])}</span>
+                                    </div>
+                                    <div class="w-full bg-slate-100 shrink-0">
+                                        <img class="w-full h-auto aspect-square object-cover block" src="${base64Images[i]}" alt="Panel ${i+1}">
+                                    </div>
+                                    <div class="p-2 sm:p-3 border-t border-slate-100 bg-white h-auto flex-grow flex items-center justify-center">
+                                        <p class="comic-font text-[10px] sm:text-sm text-slate-800 text-center break-keep-words w-full">${escapeHtml(dialogues[i])}</p>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        <div class="mt-5 flex justify-between items-center px-2">
+                            <button onclick="likeAction(this)" class="group flex items-center gap-1.5 text-sm sm:text-base font-bold text-slate-400 hover:text-rose-500 transition-colors">
+                                <i class="fa-solid fa-heart transform group-active:scale-125 transition-transform"></i> 
+                                <span class="like-cnt text-slate-600 group-hover:text-rose-500">0</span>
+                            </button>
+                            <span class="text-xs text-slate-400 font-medium">방금 전</span>
+                        </div>
+                    </div>
+                `;
+
+            } catch (error) {
+                console.error(error);
+                showMessage("그림 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.", "error");
+                document.getElementById('emptyState').classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                overlay.classList.add('hidden');
+                overlay.classList.remove('flex');
+            }
+        });
+
+        function publishToGallery() {
+            if(!generatedComicHTML) return;
+
+            const gallery = document.getElementById('galleryGrid');
+            const emptyMsg = document.getElementById('emptyGalleryMsg');
+            if(emptyMsg) emptyMsg.style.display = 'none';
+
+            gallery.insertAdjacentHTML('afterbegin', generatedComicHTML);
+            
+            if (pendingSubmissionTeam) {
+                participatedTeams.add(pendingSubmissionTeam);
+                renderParticipationModal(); 
+            }
+
+            document.getElementById('comicForm').reset();
+            document.getElementById('teamName').selectedIndex = 0;
+            document.getElementById('comicGrid').classList.add('hidden');
+            document.getElementById('comicGrid').classList.remove('flex');
+            document.getElementById('emptyState').classList.remove('hidden');
+            document.getElementById('publishBtn').classList.add('hidden');
+            
+            generatedComicHTML = "";
+            pendingSubmissionTeam = "";
+
+            showMessage("갤러리에 성공적으로 전시되었습니다! 조직 참여 현황이 업데이트되었습니다.");
+        }
+
+        function likeAction(btn) {
+            const span = btn.querySelector('.like-cnt');
+            if(!btn.classList.contains('text-rose-500')) {
+                span.textContent = parseInt(span.textContent) + 1;
+                btn.classList.add('text-rose-500');
+                btn.classList.remove('text-slate-400');
+            }
+        }
+
+        async function generateImageWithRetry(userPrompt, maxRetries = 3) {
+            const stylePrompt = "Cute corporate webtoon illustration style, flat colors, clean lines, simple office background, highly detailed comic panel. NO TEXT, NO WORDS, NO SPEECH BUBBLES. Situation: ";
+            const fullPrompt = stylePrompt + userPrompt;
+
+            const payload = {
+                contents: [{ parts: [{ text: fullPrompt }] }],
+                generationConfig: {
+                    responseModalities: ['IMAGE'],
+                    imageConfig: { aspectRatio: "1:1" }
+                }
+            };
+
+            let delay = 1500;
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const response = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    
+                    const result = await response.json();
+                    const part = result?.candidates?.[0]?.content?.parts?.find(p => p.inlineData);
+                    
+                    if (part) return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+                    throw new Error("No image data found");
+
+                } catch (error) {
+                    if (i === maxRetries - 1) throw error;
+                    await new Promise(res => setTimeout(res, delay));
+                    delay *= 2;
+                }
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
