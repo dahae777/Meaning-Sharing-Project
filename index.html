@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko" class="h-full bg-slate-50">
 <head>
     <meta charset="UTF-8">
@@ -290,8 +290,6 @@
     </div>
 
     <script>
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbzxmjWy8Md4tiDNXpe1NumOIMsG7kolKA4P7AV5eRvRKzQAdAQ8WlYq73UHdNNEEVED/exec';
-        
         const allTeams = [
             "K-SOX팀", "개인정보보호팀", "건축TF", "경영기획팀", "구매지원팀", 
             "글로벌소싱팀", "노사기획팀", "노사협력팀", "대외협력팀", "법무팀", 
@@ -522,72 +520,55 @@ const GAS_URL = 'https://script.google.com/macros/s/AKfycbzxmjWy8Md4tiDNXpe1NumO
             }
         }
 
-// 기존의 generateImageWithRetry 함수를 이걸로 완전히 덮어씌워 주세요!
-async function generateImageWithRetry(payload, retries = 3) {
-    // 💡 GAS URL 대신 프론트엔드에서 직접 AI와 연결합니다!
-    const API_KEY = "AQ.Ab8RN6K-fHViaREbdkLESPpl9-14eyaGUwIbD4GLmUzRb6ya8Q"; 
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-image:generateContent?key=${API_KEY}`;
+        // 프론트엔드 직접 통신을 위한 최종 무적 함수
+        async function generateImageWithRetry(sceneText, retries = 3) {
+            // 💡 적어주신 API 키를 그대로 유지했습니다! (만약 작동하지 않는다면 AIzaSy... 로 시작하는 키로 바꿔주세요)
+            const API_KEY = "AQ.Ab8RN6K-fHViaREbdkLESPpl9-14eyaGUwIbD4GLmUzRb6ya8Q"; 
+            const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-image:generateContent?key=${API_KEY}`;
 
-    // 1. 프론트엔드에서 직접 프롬프트 디테일 살붙이기 
-    const originalText = payload.contents[0].parts[0].text;
-    const fallbackStyle = "Masterpiece, highly detailed Korean modern corporate webtoon illustration, vibrant flat colors, clean professional lines, dynamic lighting, expressive character emotions, realistic modern office background. NO TEXT, NO WORDS, NO SPEECH BUBBLES. Situation: ";
-    
-    // AI가 그리기 쉽게 살을 붙인 프롬프트로 몰래 교체해서 전송!
-    payload.contents[0].parts[0].text = fallbackStyle + originalText;
+            // AI가 그리기 쉽게 살을 붙인 프롬프트 조립
+            const fallbackStyle = "Masterpiece, highly detailed Korean modern corporate webtoon illustration, vibrant flat colors, clean professional lines, dynamic lighting, expressive character emotions, realistic modern office background. NO TEXT, NO WORDS, NO SPEECH BUBBLES. Situation: ";
+            const finalPrompt = fallbackStyle + sceneText;
+            
+            const payload = {
+                "contents": [{
+                    "parts": [{ "text": finalPrompt }]
+                }],
+                "generationConfig": {
+                    "responseModalities": ["IMAGE"],
+                    "imageConfig": { "aspectRatio": "1:1" }
+                }
+            };
 
-    try {
-        // 2. 구글 서버로 직접 쏘기 (용량 제한 없음, CORS 에러 없음!)
-        const response = await fetch(API_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload)
-        });
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
 
-        if (!response.ok) {
-            const errorData = await response.text();
-            throw new Error(errorData);
-        }
+                if (!response.ok) {
+                    const errorData = await response.text();
+                    throw new Error(errorData);
+                }
 
-        const data = await response.json();
-        return data;
-        
-    } catch (error) {
-        if (retries > 0) {
-            console.log(`생성 재시도 중... 남은 횟수: ${retries}`);
-            await new Promise(res => setTimeout(res, 2000));
-            return generateImageWithRetry(payload, retries - 1);
-        } else {
-            throw error;
-        }
-    }
-}
-
-            let delay = 1500;
-            for (let i = 0; i < maxRetries; i++) {
-                try {
-                    const response = await fetch(GAS_URL, {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'text/plain;charset=utf-8',
-    },
-    body: JSON.stringify(payload),
-    redirect: 'follow'
-});
-
-                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                    
-                    const result = await response.json();
-                    const part = result?.candidates?.[0]?.content?.parts?.find(p => p.inlineData);
-                    
-                    if (part) return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
-                    throw new Error("No image data found");
-
-                } catch (error) {
-                    if (i === maxRetries - 1) throw error;
-                    await new Promise(res => setTimeout(res, delay));
-                    delay *= 2;
+                const data = await response.json();
+                
+                // 구글 API에서 이미지 base64 데이터만 쏙 뽑아내기
+                const part = data?.candidates?.[0]?.content?.parts?.find(p => p.inlineData);
+                if (part) {
+                    return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+                } else {
+                    throw new Error("이미지 데이터를 찾을 수 없습니다.");
+                }
+                
+            } catch (error) {
+                if (retries > 0) {
+                    console.log(`생성 재시도 중... 남은 횟수: ${retries}`);
+                    await new Promise(res => setTimeout(res, 2000));
+                    return generateImageWithRetry(sceneText, retries - 1);
+                } else {
+                    throw error;
                 }
             }
         }
