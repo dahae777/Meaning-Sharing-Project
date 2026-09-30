@@ -417,12 +417,12 @@
             }
         }
 
-        // 모달 및 팝업 세팅
+        // 모달 및 팝업 세팅 (오류 수정 완료)
         function renderParticipationModal() {
             const participatedList = document.getElementById('participatedList');
             const notParticipatedList = document.getElementById('notParticipatedList');
-            const noParticipatedMsg = document.getElementById('noParticipatedMsg');
             
+            // 기존 목록을 비웁니다.
             participatedList.innerHTML = '';
             notParticipatedList.innerHTML = '';
             let pCount = 0, npCount = 0;
@@ -444,7 +444,11 @@
 
             document.getElementById('participatedCount').textContent = pCount;
             document.getElementById('notParticipatedCount').textContent = npCount;
-            noParticipatedMsg.style.display = pCount === 0 ? 'block' : 'none';
+            
+            // 참여한 팀이 0개일 때만 직접 안내 문구를 그려줍니다.
+            if (pCount === 0) {
+                participatedList.innerHTML = `<p class="text-sm text-slate-400 w-full p-4 bg-slate-50 rounded-lg text-center border border-dashed border-slate-200">아직 참여한 팀이 없습니다.</p>`;
+            }
         }
 
         function openParticipationModal() { document.getElementById('participationModal').classList.remove('hidden'); document.getElementById('participationModal').classList.add('flex'); renderParticipationModal(); }
