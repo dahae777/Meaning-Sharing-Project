@@ -522,17 +522,47 @@ const GAS_URL = 'https://script.google.com/macros/s/AKfycbzxmjWy8Md4tiDNXpe1NumO
             }
         }
 
-       async function generateImageWithRetry(userPrompt, maxRetries = 3) {
-           const stylePrompt = "Masterpiece, highly detailed Korean modern corporate webtoon illustration, vibrant flat colors, extremely clean and professional lines, dynamic and exaggerated expressive character emotions, realistic modern office background, highly polished comic panel. NO TEXT, NO WORDS, NO SPEECH BUBBLES. Situation: ";
-            const fullPrompt = stylePrompt + userPrompt;
+// 기존의 generateImageWithRetry 함수를 이걸로 완전히 덮어씌워 주세요!
+async function generateImageWithRetry(payload, retries = 3) {
+    // 💡 GAS URL 대신 프론트엔드에서 직접 AI와 연결합니다!
+    const API_KEY = "AIzaSy...(여기에 실제 API 키를 넣어주세요)"; 
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-image:generateContent?key=${API_KEY}`;
 
-            const payload = {
-                contents: [{ parts: [{ text: fullPrompt }] }],
-                generationConfig: {
-                    responseModalities: ['IMAGE'],
-                    imageConfig: { aspectRatio: "1:1" }
-                }
-            };
+    // 1. 프론트엔드에서 직접 프롬프트 디테일 살붙이기 
+    const originalText = payload.contents[0].parts[0].text;
+    const fallbackStyle = "Masterpiece, highly detailed Korean modern corporate webtoon illustration, vibrant flat colors, clean professional lines, dynamic lighting, expressive character emotions, realistic modern office background. NO TEXT, NO WORDS, NO SPEECH BUBBLES. Situation: ";
+    
+    // AI가 그리기 쉽게 살을 붙인 프롬프트로 몰래 교체해서 전송!
+    payload.contents[0].parts[0].text = fallbackStyle + originalText;
+
+    try {
+        // 2. 구글 서버로 직접 쏘기 (용량 제한 없음, CORS 에러 없음!)
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.text();
+            throw new Error(errorData);
+        }
+
+        const data = await response.json();
+        return data;
+        
+    } catch (error) {
+        if (retries > 0) {
+            console.log(`생성 재시도 중... 남은 횟수: ${retries}`);
+            await new Promise(res => setTimeout(res, 2000));
+            return generateImageWithRetry(payload, retries - 1);
+        } else {
+            throw error;
+        }
+    }
+}
 
             let delay = 1500;
             for (let i = 0; i < maxRetries; i++) {
