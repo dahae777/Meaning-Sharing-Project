@@ -276,10 +276,10 @@
         // 🚨 [설정 1] 구글 API 키
         const API_KEY = "AQ.Ab8RN6K-fHViaREbdkLESPpl9-14eyaGUwIbD4GLmUzRb6ya8Q"; 
 
-        // 🚨 [설정 2] 파워 오토메이트 ➡️ [저장하기] URL (기존 거 그대로 둠)
+        // 🚨 [설정 2] 파워 오토메이트 ➡️ [저장하기] URL 
         const POST_URL = "https://defaultf8d5ac988fa943558cd984f322fb0a.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/11/workflows/8fdff1b1f0914475ad179f60b5297392/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=uAsxQaH-D8rbf5Ax7U6iK7anSL54EbMcAKLRAIaTiAM";
         
-        // 🚨 [설정 3] 파워 오토메이트 ⬅️ [불러오기] URL (방금 파워 오토메이트에서 만든 새 주소를 여기에 꼭 넣으세요!)
+        // 🚨 [설정 3] 파워 오토메이트 ⬅️ [불러오기] URL 
         const GET_URL = "https://defaultf8d5ac988fa943558cd984f322fb0a.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/00/workflows/c827f633f43249d29cb4117e1ef25621/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=EmAb43RxVmaMh99QF6Wrn0c0OVmru25j0rbqpwl-3Ag";
 
         const allTeams = [
@@ -294,9 +294,9 @@
         let generatedComicHTML = "";
 
         // 💡 페이징 처리를 위한 변수 모음
-        let allGalleryData = []; // 서버에서 가져온 20개 전체 데이터를 담아두는 창고
-        let currentDisplayCount = 0; // 현재 화면에 몇 개까지 그렸는지 기억하는 숫자
-        const ITEMS_PER_PAGE = 4; // 한 번에 더 보여줄 개수 (4개)
+        let allGalleryData = []; 
+        let currentDisplayCount = 0; 
+        const ITEMS_PER_PAGE = 4; 
 
         function initApp() {
             const teamSelect = document.getElementById('teamName');
@@ -310,20 +310,19 @@
             loadGallery(); 
         }
 
-      // 🌟 갤러리 데이터를 몽땅 가져와서 창고에 담기 (무한 로딩 방지 완벽 탑재)
+        // 🌟 갤러리 데이터를 몽땅 가져와서 창고에 담기 (중복 코드 완벽 제거 및 무한 로딩 방지)
         async function loadGallery() {
-            // 주소가 비어있거나 http로 시작하지 않으면 화면에 바로 경고를 띄웁니다!
             if (!GET_URL || !GET_URL.trim().startsWith("http")) {
                 document.getElementById('galleryGrid').innerHTML = `
                     <div class="col-span-full text-center text-rose-500 font-bold py-10 border-2 border-rose-100 rounded-xl bg-rose-50">
                         <p class="text-lg"><i class="fa-solid fa-triangle-exclamation"></i> URL 주소 입력 오류!</p>
-                        <p class="text-sm font-normal mt-3 text-slate-700">GET_URL 주소 앞에 빈칸이 있거나 https:// 로 시작하지 않습니다. 코드의 주소 부분을 다시 확인해주세요!</p>
+                        <p class="text-sm font-normal mt-3 text-slate-700">GET_URL 주소가 올바르지 않습니다. 코드를 확인해주세요!</p>
                     </div>`;
                 return; 
             }
 
             try {
-                const response = await fetch(GET_URL.trim()); // trim()으로 혹시 모를 앞뒤 공백 자동 제거
+                const response = await fetch(GET_URL.trim()); 
                 
                 if (!response.ok) {
                     const errorMsg = await response.text();
@@ -337,7 +336,7 @@
                 if (typeof data === 'string') data = JSON.parse(data);
 
                 if (!Array.isArray(data)) {
-                    throw new Error("가져온 데이터가 목록 형태가 아닙니다. 실제 넘어온 데이터: " + JSON.stringify(data).substring(0, 100));
+                    throw new Error("가져온 데이터가 목록 형태가 아닙니다. 실제 데이터: " + JSON.stringify(data).substring(0, 100));
                 }
                 
                 allGalleryData = data;
@@ -369,43 +368,12 @@
                     </div>`;
             }
         }
-                // 현황판 업데이트 및 화면 그리기
-                allGalleryData.forEach(item => { if(item.team) participatedTeams.add(item.team); });
-                renderParticipationModal();
-                renderGalleryPage();
-                
-            } catch(e) {
-                console.error("갤러리 불러오기 에러:", e);
-                // 화면에 진짜 에러 원인을 예쁘고 크게 띄워줍니다.
-                document.getElementById('galleryGrid').innerHTML = `
-                    <div class="col-span-full text-center text-rose-500 font-bold py-10 border-2 border-rose-100 rounded-xl bg-rose-50">
-                        <p class="text-lg"><i class="fa-solid fa-triangle-exclamation"></i> 갤러리를 불러오는데 실패했습니다.</p>
-                        <p class="text-sm font-normal mt-3 text-slate-700 break-keep-words bg-white p-3 rounded-lg border border-rose-100 shadow-sm">
-                            <span class="font-bold text-rose-600">진짜 원인:</span> ${e.message}
-                        </p>
-                    </div>`;
-            }
-        }
 
-                // 현황판 업데이트
-                allGalleryData.forEach(item => { if(item.team) participatedTeams.add(item.team); });
-                renderParticipationModal();
-                
-                // 처음 4개만 화면에 그리기
-                renderGalleryPage();
-                
-            } catch(e) {
-                console.error("갤러리 불러오기 에러:", e);
-                document.getElementById('galleryGrid').innerHTML = `<div class="col-span-full text-center text-rose-500 font-bold py-10"><p>갤러리를 불러오는데 실패했습니다.</p><p class="text-sm font-normal mt-2 text-slate-500">진짜 에러 원인: ${e.message}</p></div>`;
-            }
-        }
-
-        // 🌟 창고(allGalleryData)에서 4개씩 꺼내서 화면에 그려주는 함수 (더 보기 버튼 누를 때마다 실행됨)
+        // 🌟 창고에서 4개씩 꺼내서 화면에 그려주는 함수
         function renderGalleryPage() {
             const gallery = document.getElementById('galleryGrid');
             const loadMoreBtn = document.getElementById('loadMoreContainer');
             
-            // 앞으로 그려야 할 4개 쪼개기
             const nextBatch = allGalleryData.slice(currentDisplayCount, currentDisplayCount + ITEMS_PER_PAGE);
 
             nextBatch.forEach(item => {
@@ -440,16 +408,12 @@
                 gallery.insertAdjacentHTML('beforeend', html);
             });
 
-            // 그린 개수 기억하기
             currentDisplayCount += nextBatch.length;
 
-            // 남은 게 없으면 더 보기 버튼 숨기고, 남은 게 있으면 보여주기
             if (currentDisplayCount >= allGalleryData.length) {
-                loadMoreBtn.classList.add('hidden');
-                loadMoreBtn.classList.remove('flex');
+                loadMoreBtn.classList.add('hidden'); loadMoreBtn.classList.remove('flex');
             } else {
-                loadMoreBtn.classList.remove('hidden');
-                loadMoreBtn.classList.add('flex');
+                loadMoreBtn.classList.remove('hidden'); loadMoreBtn.classList.add('flex');
             }
         }
 
