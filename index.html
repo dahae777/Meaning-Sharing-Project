@@ -515,8 +515,13 @@
                         body: JSON.stringify(payload)
                     });
 
-                    if (response.ok) {
+                   if (response.ok) {
                         showMessage("사내 갤러리에 성공적으로 전시되었습니다! 🎉");
+                        
+                        // 갤러리 영역에 방금 만든 만화를 추가합니다!
+                        const emptyMsg = document.getElementById('emptyGalleryMsg');
+                        if (emptyMsg) emptyMsg.style.display = 'none';
+                        document.getElementById('galleryGrid').insertAdjacentHTML('afterbegin', generatedComicHTML);
                         
                         document.getElementById('comicForm').reset();
                         document.getElementById('teamName').selectedIndex = 0;
