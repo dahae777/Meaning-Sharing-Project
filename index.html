@@ -339,7 +339,7 @@
                 
             } catch(e) {
                 console.error("갤러리 불러오기 에러:", e);
-                document.getElementById('galleryGrid').innerHTML = `<p class="col-span-full text-center text-rose-500 font-bold py-10">갤러리를 불러오는데 실패했습니다.</p>`;
+                document.getElementById('galleryGrid').innerHTML = `<div class="col-span-full text-center text-rose-500 font-bold py-10"><p>갤러리를 불러오는데 실패했습니다.</p><p class="text-sm font-normal mt-2 text-slate-500">진짜 에러 원인: ${e.message}</p></div>`;
             }
         }
 
