@@ -522,7 +522,7 @@ const GAS_URL = 'https://script.google.com/macros/s/AKfycbzxmjWy8Md4tiDNXpe1NumO
             }
         }
 
-        async function generateImageWithRetry(userPrompt, maxRetries = 3) {
+       async function generateImageWithRetry(userPrompt, maxRetries = 3) {
             const stylePrompt = "Cute corporate webtoon illustration style, flat colors, clean lines, simple office background, highly detailed comic panel. NO TEXT, NO WORDS, NO SPEECH BUBBLES. Situation: ";
             const fullPrompt = stylePrompt + userPrompt;
 
@@ -538,8 +538,9 @@ const GAS_URL = 'https://script.google.com/macros/s/AKfycbzxmjWy8Md4tiDNXpe1NumO
             for (let i = 0; i < maxRetries; i++) {
                 try {
                     const response = await fetch(GAS_URL, {
-    method: 'POST',
-    body: JSON.stringify(requestBody)
+                        method: 'POST',
+                        // 수정된 부분: requestBody -> payload
+                        body: JSON.stringify(payload) 
                     });
 
                     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
