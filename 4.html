@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="ko" class="h-full bg-slate-50">
 <head>
     <meta charset="UTF-8">
@@ -290,8 +290,7 @@
     </div>
 
     <script>
-        const API_KEY = ""; 
-        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image:generateContent?key=${API_KEY}`;
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzxmjWy8Md4tiDNXpe1NumOIMsG7kolKA4P7AV5eRvRKzQAdAQ8WlYq73UHdNNEEVED/exec';
         
         const allTeams = [
             "K-SOX팀", "개인정보보호팀", "건축TF", "경영기획팀", "구매지원팀", 
@@ -538,10 +537,9 @@
             let delay = 1500;
             for (let i = 0; i < maxRetries; i++) {
                 try {
-                    const response = await fetch(API_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
+                    const response = await fetch(GAS_URL, {
+    method: 'POST',
+    body: JSON.stringify(requestBody)
                     });
 
                     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
