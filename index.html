@@ -369,7 +369,7 @@
             }
         }
 
-        // 🌟 창고에서 4개씩 꺼내서 화면에 그려주는 함수
+      // 🌟 창고에서 4개씩 꺼내서 화면에 그려주는 함수 (스마트 이름표 탐색 및 디버깅 탑재)
         function renderGalleryPage() {
             const gallery = document.getElementById('galleryGrid');
             const loadMoreBtn = document.getElementById('loadMoreContainer');
@@ -377,20 +377,39 @@
             const nextBatch = allGalleryData.slice(currentDisplayCount, currentDisplayCount + ITEMS_PER_PAGE);
 
             nextBatch.forEach(item => {
-                let base64str = item.imageContent;
-                if(typeof item.imageContent === 'object' && item.imageContent.$content) {
-                    base64str = item.imageContent.$content;
+                // 1️⃣ 스마트 이름표 찾기 (대소문자, 한글 등 파워 오토메이트의 변덕 완벽 방어)
+                const valTitle = item.title || item.Title || item.TITLE || item['제목'] || '';
+                const valTeam = item.team || item.Team || item.TEAM || item['팀명'] || item['소속팀'] || '';
+                const valAuthor = item.author || item.Author || item.AUTHOR || item['작성자'] || '';
+                
+                // 🚨 디버깅용: 만약 값을 전혀 못 찾았다면, 무슨 이름표(Key)가 넘어왔는지 화면에 띄웁니다!
+                const debugKeys = Object.keys(item).join(", ");
+                const displayTitle = valTitle ? valTitle : `⚠️ 매핑 오류 (넘어온 이름표들: ${debugKeys})`;
+                const displayTeam = valTeam ? valTeam : '팀 없음';
+                const displayAuthor = valAuthor ? valAuthor : '작성자 미상';
+
+                // 2️⃣ 이미지 데이터 스마트 찾기
+                let rawImg = item.imageContent || item.ImageContent || item.imageB64 || item.body || item['첨부 파일 콘텐츠'] || item['첨부파일'];
+                
+                let base64str = "";
+                if (typeof rawImg === 'string') {
+                    base64str = rawImg;
+                } else if (typeof rawImg === 'object' && rawImg !== null) {
+                    // Power Automate가 $content 나 body 로 한 번 더 싸서 보낼 때 껍데기 벗기기
+                    base64str = rawImg.$content || rawImg.contentBytes || rawImg.body || "";
                 }
-                const imgSrc = `data:image/png;base64,${base64str}`;
+
+                // 이미지가 없거나 엑박일 때 보여줄 에러 방지용 기본 안내 이미지
+                const imgSrc = base64str ? `data:image/png;base64,${base64str}` : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect width="400" height="400" fill="%23f8fafc"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="16" fill="%23ef4444">첨부파일(이미지)이 파워오토메이트에 담기지 않았습니다.</text></svg>';
                 
                 const html = `
                     <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 p-4 sm:p-6 flex flex-col">
                         <div class="mb-5 text-center">
-                            <h3 class="comic-font text-xl sm:text-2xl text-slate-800 mb-3 break-keep-words">${escapeHtml(item.title)}</h3>
+                            <h3 class="comic-font text-xl sm:text-2xl text-slate-800 mb-3 break-keep-words">${escapeHtml(displayTitle)}</h3>
                             <div class="flex items-center justify-center gap-2 flex-wrap">
-                                <span class="bg-indigo-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">${escapeHtml(item.team)}</span>
+                                <span class="bg-indigo-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">${escapeHtml(displayTeam)}</span>
                                 <span class="bg-slate-100 text-slate-700 text-xs font-bold px-3 py-1 rounded-full border border-slate-200">
-                                    <i class="fa-solid fa-user-pen mr-1 text-slate-400"></i>${escapeHtml(item.author)}
+                                    <i class="fa-solid fa-user-pen mr-1 text-slate-400"></i>${escapeHtml(displayAuthor)}
                                 </span>
                             </div>
                         </div>
