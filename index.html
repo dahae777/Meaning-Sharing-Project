@@ -310,13 +310,32 @@
             loadGallery(); 
         }
 
-        // 🌟 갤러리 데이터를 몽땅 가져와서 창고에 담기
+        // 🌟 갤러리 데이터를 몽땅 가져와서 창고에 담기 (초강력 에러 방어 탑재)
         async function loadGallery() {
             if (!GET_URL.startsWith("http")) return; 
 
             try {
                 const response = await fetch(GET_URL);
-                allGalleryData = await response.json();
+                
+                // 1️⃣ 만약 주소가 틀렸거나 권한이 막혀서 서버가 에러를 뱉으면 여기서 바로 잡아냅니다.
+                if (!response.ok) {
+                    const errorMsg = await response.text();
+                    throw new Error(`[서버 거부] 상태 코드 ${response.status} / ${errorMsg.substring(0, 50)}...`);
+                }
+
+                let data = await response.json();
+                
+                // 2️⃣ 파워 오토메이트가 혹시라도 포장지(value 등)에 싸서 보냈다면 자동으로 껍데기를 벗겨냅니다.
+                if (data && Array.isArray(data.value)) data = data.value;
+                if (data && Array.isArray(data.GalleryData)) data = data.GalleryData;
+                if (typeof data === 'string') data = JSON.parse(data);
+
+                // 3️⃣ 그래도 배열(목록)이 아니라면, 대체 무슨 데이터를 보낸 건지 화면에 그대로 띄워줍니다.
+                if (!Array.isArray(data)) {
+                    throw new Error("가져온 데이터가 목록 형태가 아닙니다. 실제 넘어온 데이터: " + JSON.stringify(data).substring(0, 100));
+                }
+                
+                allGalleryData = data;
                 
                 const gallery = document.getElementById('galleryGrid');
                 gallery.innerHTML = ''; 
@@ -329,6 +348,24 @@
                     </div>`;
                     return;
                 }
+
+                // 현황판 업데이트 및 화면 그리기
+                allGalleryData.forEach(item => { if(item.team) participatedTeams.add(item.team); });
+                renderParticipationModal();
+                renderGalleryPage();
+                
+            } catch(e) {
+                console.error("갤러리 불러오기 에러:", e);
+                // 화면에 진짜 에러 원인을 예쁘고 크게 띄워줍니다.
+                document.getElementById('galleryGrid').innerHTML = `
+                    <div class="col-span-full text-center text-rose-500 font-bold py-10 border-2 border-rose-100 rounded-xl bg-rose-50">
+                        <p class="text-lg"><i class="fa-solid fa-triangle-exclamation"></i> 갤러리를 불러오는데 실패했습니다.</p>
+                        <p class="text-sm font-normal mt-3 text-slate-700 break-keep-words bg-white p-3 rounded-lg border border-rose-100 shadow-sm">
+                            <span class="font-bold text-rose-600">진짜 원인:</span> ${e.message}
+                        </p>
+                    </div>`;
+            }
+        }
 
                 // 현황판 업데이트
                 allGalleryData.forEach(item => { if(item.team) participatedTeams.add(item.team); });
