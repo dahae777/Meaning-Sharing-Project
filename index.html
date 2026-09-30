@@ -525,7 +525,7 @@ const GAS_URL = 'https://script.google.com/macros/s/AKfycbzxmjWy8Md4tiDNXpe1NumO
 // 기존의 generateImageWithRetry 함수를 이걸로 완전히 덮어씌워 주세요!
 async function generateImageWithRetry(payload, retries = 3) {
     // 💡 GAS URL 대신 프론트엔드에서 직접 AI와 연결합니다!
-    const API_KEY = "AIzaSy...(여기에 실제 API 키를 넣어주세요)"; 
+    const API_KEY = "AQ.Ab8RN6K-fHViaREbdkLESPpl9-14eyaGUwIbD4GLmUzRb6ya8Q"; 
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-image:generateContent?key=${API_KEY}`;
 
     // 1. 프론트엔드에서 직접 프롬프트 디테일 살붙이기 
