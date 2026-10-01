@@ -99,7 +99,6 @@
                             </script>
                         </div>
                         
-                        <!-- 🚨 갤러리 전시 주의사항 알림 박스 추가 완료 -->
                         <div class="mt-6 w-full max-w-2xl bg-rose-50 border border-rose-200 rounded-lg p-3 flex items-start gap-3">
                             <i class="fa-solid fa-circle-exclamation text-rose-500 mt-1"></i>
                             <p class="text-xs sm:text-[13px] text-rose-700 leading-snug break-keep-words font-medium">
@@ -142,6 +141,9 @@
         const API_KEY = "AQ.Ab8RN6K-fHViaREbdkLESPpl9-14eyaGUwIbD4GLmUzRb6ya8Q"; 
         const POST_URL = "https://defaultf8d5ac988fa943558cd984f322fb0a.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/11/workflows/8fdff1b1f0914475ad179f60b5297392/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=uAsxQaH-D8rbf5Ax7U6iK7anSL54EbMcAKLRAIaTiAM";
         const GET_URL = "https://defaultf8d5ac988fa943558cd984f322fb0a.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/00/workflows/c827f633f43249d29cb4117e1ef25621/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=EmAb43RxVmaMh99QF6Wrn0c0OVmru25j0rbqpwl-3Ag";
+        
+        // 🚨 2단계에서 만든 파워 오토메이트 URL을 아래 따옴표 안에 꼭 붙여넣어주세요!
+        const LIKE_URL = ""; 
 
         const allTeams = ["K-SOX팀", "개인정보보호팀", "건축TF", "경영기획팀", "구매지원팀", "글로벌소싱팀", "노사기획팀", "노사협력팀", "대외협력팀", "법무팀", "영업관리팀", "인사기획팀", "인재문화팀", "인재확보팀", "재정팀", "총무팀", "커뮤니케이션팀", "컴플라이언스팀", "투자기획팀", "한국조달팀", "회계팀"];
         let participatedTeams = new Set(); let allGalleryData = []; let currentDisplayCount = 0; const ITEMS_PER_PAGE = 4; 
@@ -223,6 +225,10 @@
                 let valTeam = findData(item, ['team', '팀', '소속']);
                 let valAuthor = findData(item, ['author', '작성자', '이름', 'name']);
                 const valImage = findData(item, ['image', '사진', '그림', 'base64', 'imagedata']);
+                
+                // 🚨 서버에서 ID와 HeartCount 추출
+                let valId = item.ID || item.Id || item.id;
+                let valHeart = parseInt(item.HeartCount || 0);
 
                 if (typeof valAuthor === 'string' && valAuthor.includes('i:0#')) valAuthor = '';
 
@@ -245,6 +251,12 @@
                 const fallbackSvg = encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect width="100%" height="100%" fill="#f1f5f9"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="16" font-weight="bold" fill="#94a3b8">이미지 없음</text></svg>');
                 const imgSrc = valImage ? `data:image/jpeg;base64,${valImage}` : `data:image/svg+xml;utf8,${fallbackSvg}`;
                 
+                const idKey = (finalTitle + finalTeam).replace(/\s/g, '');
+                let isLiked = localStorage.getItem('liked_' + idKey) === 'true';
+                
+                const heartColor = isLiked ? 'text-rose-500' : 'text-slate-400';
+                const heartIcon = isLiked ? 'fa-solid fa-heart scale-125' : 'fa-solid fa-heart';
+                
                 const html = `
                     <div class="bg-white border rounded-2xl shadow-md p-4 flex flex-col relative group">
                         <div class="export-target bg-white rounded-xl pb-2 flex flex-col items-center">
@@ -260,9 +272,10 @@
                             </div>
                         </div>
                         <div class="mt-4 flex justify-between items-center px-2 pt-3 border-t border-slate-100">
-                            <button onclick="likeAction(this)" class="group flex items-center gap-1.5 text-sm sm:text-base font-bold text-slate-400 hover:text-rose-500 transition-colors">
-                                <i class="fa-solid fa-heart transform group-active:scale-125 transition-transform"></i> 
-                                <span class="like-cnt text-slate-600 group-hover:text-rose-500">0</span>
+                            <!-- 🚨 전사 동기화 하트 전송 함수 연결 -->
+                            <button onclick="likeAction(this, '${valId}', '${escapeHtml(finalTitle).replace(/'/g, "\\'")}', ${valHeart}, '${idKey}')" class="group flex items-center gap-1.5 text-sm sm:text-base font-bold ${heartColor} hover:text-rose-500 transition-colors">
+                                <i class="${heartIcon} transform group-active:scale-125 transition-transform"></i> 
+                                <span class="like-cnt text-slate-600 group-hover:text-rose-500">${valHeart}</span>
                             </button>
                             <div class="flex gap-3">
                                 <button onclick="downloadGalleryCard(this, '${escapeHtml(finalTitle)}')" class="text-slate-400 hover:text-indigo-600 transition-colors text-xl p-1" title="다운로드 (인쇄용)">
@@ -279,6 +292,32 @@
             currentDisplayCount += nextBatch.length;
             if (currentDisplayCount >= allGalleryData.length) { loadMoreBtn.classList.add('hidden'); loadMoreBtn.classList.remove('flex'); } 
             else { loadMoreBtn.classList.remove('hidden'); loadMoreBtn.classList.add('flex'); }
+        }
+
+        // 🚨 하트 클릭 시 실시간 서버 업데이트 함수
+        async function likeAction(btn, id, title, currentServerLikes, idKey) {
+            if(btn.classList.contains('text-rose-500')) return; // 이미 누른 경우 중복 방지
+
+            const span = btn.querySelector('.like-cnt');
+            const icon = btn.querySelector('i');
+            const newLikes = parseInt(currentServerLikes) + 1;
+            
+            // 1. 클릭 즉시 화면 숫자부터 올리기 (기다림 없는 빠른 반응)
+            span.textContent = newLikes;
+            btn.classList.add('text-rose-500');
+            btn.classList.remove('text-slate-400');
+            icon.classList.add('scale-125');
+            localStorage.setItem('liked_' + idKey, 'true');
+
+            // 2. 파워 오토메이트 서버로 업데이트 요청 전송
+            try {
+                if(!LIKE_URL || LIKE_URL.trim() === "") return; 
+                fetch(LIKE_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: parseInt(id), title: title, heartCount: newLikes })
+                });
+            } catch (e) { console.error("하트 서버 전송 실패:", e); }
         }
 
         async function downloadGalleryCard(btn, title) {
@@ -371,8 +410,6 @@
                 } else throw new Error("서버 오류");
             } catch (error) { console.error(error); showMessage("전송 중 오류 발생", "error"); } finally { document.getElementById('publishBtn').disabled = false; }
         }
-
-        function likeAction(btn) { const span = btn.querySelector('.like-cnt'); if(!btn.classList.contains('text-rose-500')) { span.textContent = parseInt(span.textContent) + 1; btn.classList.add('text-rose-500'); btn.classList.remove('text-slate-400'); } }
 
         async function generateImageWithRetry(sceneText, retries = 3) {
             const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${API_KEY}`;
