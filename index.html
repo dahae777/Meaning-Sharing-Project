@@ -153,7 +153,6 @@
                             </div>
                         </div>
                         
-                        <!-- 고정된 상자 높이로 예쁘게 정렬된 컷들 -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 w-full max-w-2xl mx-auto bg-slate-800 p-3 md:p-4 rounded-xl shadow-2xl">
                             <script>
                                 for(let i=1; i<=4; i++) {
@@ -213,7 +212,6 @@
                     </div>
                 </div>
 
-                <!-- 🚀 4개씩 보여주기: 더 보기 버튼 -->
                 <div id="loadMoreContainer" class="hidden flex justify-center mt-10">
                     <button onclick="renderGalleryPage()" class="bg-white border-2 border-indigo-100 text-indigo-600 hover:bg-indigo-50 font-bold py-3 px-8 rounded-full shadow-sm transition-colors flex items-center gap-2 group">
                         더 많은 작품 감상하기 <i class="fa-solid fa-chevron-down transform group-hover:translate-y-1 transition-transform"></i>
@@ -242,9 +240,7 @@
                         <h4 class="font-bold text-slate-800 text-lg">참여 완료 팀</h4>
                         <span id="participatedCount" class="bg-emerald-100 text-emerald-800 text-xs font-bold px-2 py-0.5 rounded-full">0</span>
                     </div>
-                    <div id="participatedList" class="flex flex-wrap gap-2">
-                        <p id="noParticipatedMsg" class="text-sm text-slate-400 w-full p-4 bg-slate-50 rounded-lg text-center border border-dashed border-slate-200">아직 참여한 팀이 없습니다.</p>
-                    </div>
+                    <div id="participatedList" class="flex flex-wrap gap-2"></div>
                 </div>
 
                 <div>
@@ -273,13 +269,9 @@
     </div>
 
     <script>
-        // 🚨 [설정 1] 구글 API 키
+        // 🚨 설정 완료: API 키 및 URL이 완벽히 세팅되어 있습니다.
         const API_KEY = "AQ.Ab8RN6K-fHViaREbdkLESPpl9-14eyaGUwIbD4GLmUzRb6ya8Q"; 
-
-        // 🚨 [설정 2] 파워 오토메이트 ➡️ [저장하기] URL 
         const POST_URL = "https://defaultf8d5ac988fa943558cd984f322fb0a.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/11/workflows/8fdff1b1f0914475ad179f60b5297392/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=uAsxQaH-D8rbf5Ax7U6iK7anSL54EbMcAKLRAIaTiAM";
-        
-        // 🚨 [설정 3] 파워 오토메이트 ⬅️ [불러오기] URL 
         const GET_URL = "https://defaultf8d5ac988fa943558cd984f322fb0a.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/00/workflows/c827f633f43249d29cb4117e1ef25621/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=EmAb43RxVmaMh99QF6Wrn0c0OVmru25j0rbqpwl-3Ag";
 
         const allTeams = [
@@ -291,9 +283,6 @@
         
         let participatedTeams = new Set();
         let pendingSubmissionTeam = "";
-        let generatedComicHTML = "";
-
-        // 💡 페이징 처리를 위한 변수 모음
         let allGalleryData = []; 
         let currentDisplayCount = 0; 
         const ITEMS_PER_PAGE = 4; 
@@ -302,114 +291,85 @@
             const teamSelect = document.getElementById('teamName');
             allTeams.sort().forEach(team => {
                 const option = document.createElement('option');
-                option.value = team;
-                option.textContent = team;
+                option.value = team; option.textContent = team;
                 teamSelect.appendChild(option);
             });
             renderParticipationModal();
             loadGallery(); 
         }
 
-        // 🌟 갤러리 데이터를 몽땅 가져와서 창고에 담기 (중복 코드 완벽 제거 및 무한 로딩 방지)
         async function loadGallery() {
-            if (!GET_URL || !GET_URL.trim().startsWith("http")) {
-                document.getElementById('galleryGrid').innerHTML = `
-                    <div class="col-span-full text-center text-rose-500 font-bold py-10 border-2 border-rose-100 rounded-xl bg-rose-50">
-                        <p class="text-lg"><i class="fa-solid fa-triangle-exclamation"></i> URL 주소 입력 오류!</p>
-                        <p class="text-sm font-normal mt-3 text-slate-700">GET_URL 주소가 올바르지 않습니다. 코드를 확인해주세요!</p>
-                    </div>`;
-                return; 
-            }
-
             try {
-                const response = await fetch(GET_URL.trim()); 
-                
+                const response = await fetch(GET_URL); 
                 if (!response.ok) {
                     const errorMsg = await response.text();
-                    throw new Error(`[서버 거부] 상태 코드 ${response.status} / ${errorMsg.substring(0, 50)}...`);
+                    throw new Error(`[서버 거부] 상태 코드 ${response.status} / ${errorMsg.substring(0, 50)}`);
                 }
 
                 let data = await response.json();
-                
                 if (data && Array.isArray(data.value)) data = data.value;
                 if (data && Array.isArray(data.GalleryData)) data = data.GalleryData;
                 if (typeof data === 'string') data = JSON.parse(data);
 
                 if (!Array.isArray(data)) {
-                    throw new Error("가져온 데이터가 목록 형태가 아닙니다. 실제 데이터: " + JSON.stringify(data).substring(0, 100));
+                    throw new Error("올바른 목록 데이터가 아닙니다.");
                 }
                 
                 allGalleryData = data;
-                
                 const gallery = document.getElementById('galleryGrid');
                 gallery.innerHTML = ''; 
                 currentDisplayCount = 0;
                 
                 if (allGalleryData.length === 0) {
-                    gallery.innerHTML = `<div id="emptyGalleryMsg" class="col-span-full flex flex-col items-center justify-center text-slate-400 py-16 bg-slate-50 rounded-xl border-2 border-dashed border-slate-200">
+                    gallery.innerHTML = `<div class="col-span-full flex flex-col items-center justify-center text-slate-400 py-16 bg-slate-50 rounded-xl border-2 border-dashed border-slate-200">
                         <i class="fa-regular fa-folder-open text-4xl mb-3"></i>
                         <p class="font-medium">아직 전시된 작품이 없습니다.<br>첫 번째 작가가 되어주세요!</p>
                     </div>`;
                     return;
                 }
 
-                allGalleryData.forEach(item => { if(item.team) participatedTeams.add(item.team); });
+                allGalleryData.forEach(item => { 
+                    const t = item.team || item.Team || item.TEAM || item['팀명'] || item['소속팀'];
+                    if(t) participatedTeams.add(t); 
+                });
                 renderParticipationModal();
                 renderGalleryPage();
                 
             } catch(e) {
-                console.error("갤러리 불러오기 에러:", e);
+                console.error(e);
                 document.getElementById('galleryGrid').innerHTML = `
                     <div class="col-span-full text-center text-rose-500 font-bold py-10 border-2 border-rose-100 rounded-xl bg-rose-50">
-                        <p class="text-lg"><i class="fa-solid fa-triangle-exclamation"></i> 갤러리를 불러오는데 실패했습니다.</p>
-                        <p class="text-sm font-normal mt-3 text-slate-700 break-keep-words bg-white p-3 rounded-lg border border-rose-100 shadow-sm">
-                            <span class="font-bold text-rose-600">진짜 원인:</span> ${e.message}
-                        </p>
+                        <p class="text-lg"><i class="fa-solid fa-triangle-exclamation"></i> 갤러리 로딩 실패</p>
+                        <p class="text-sm font-normal mt-3 text-slate-700 bg-white p-3 rounded-lg shadow-sm">원인: ${e.message}</p>
                     </div>`;
             }
         }
 
-      // 🌟 창고에서 4개씩 꺼내서 화면에 그려주는 함수 (스마트 이름표 탐색 및 디버깅 탑재)
         function renderGalleryPage() {
             const gallery = document.getElementById('galleryGrid');
             const loadMoreBtn = document.getElementById('loadMoreContainer');
-            
             const nextBatch = allGalleryData.slice(currentDisplayCount, currentDisplayCount + ITEMS_PER_PAGE);
 
             nextBatch.forEach(item => {
-                // 1️⃣ 스마트 이름표 찾기 (대소문자, 한글 등 파워 오토메이트의 변덕 완벽 방어)
-                const valTitle = item.title || item.Title || item.TITLE || item['제목'] || '';
-                const valTeam = item.team || item.Team || item.TEAM || item['팀명'] || item['소속팀'] || '';
-                const valAuthor = item.author || item.Author || item.AUTHOR || item['작성자'] || '';
+                const valTitle = item.title || item.Title || item.TITLE || item['제목'] || '제목 없음';
+                const valTeam = item.team || item.Team || item.TEAM || item['팀명'] || item['소속팀'] || '팀 없음';
+                const valAuthor = item.author || item.Author || item.AUTHOR || item['작성자'] || '작성자 미상';
                 
-                // 🚨 디버깅용: 만약 값을 전혀 못 찾았다면, 무슨 이름표(Key)가 넘어왔는지 화면에 띄웁니다!
-                const debugKeys = Object.keys(item).join(", ");
-                const displayTitle = valTitle ? valTitle : `⚠️ 매핑 오류 (넘어온 이름표들: ${debugKeys})`;
-                const displayTeam = valTeam ? valTeam : '팀 없음';
-                const displayAuthor = valAuthor ? valAuthor : '작성자 미상';
-
-                // 2️⃣ 이미지 데이터 스마트 찾기
                 let rawImg = item.imageContent || item.ImageContent || item.imageB64 || item.body || item['첨부 파일 콘텐츠'] || item['첨부파일'];
-                
                 let base64str = "";
-                if (typeof rawImg === 'string') {
-                    base64str = rawImg;
-                } else if (typeof rawImg === 'object' && rawImg !== null) {
-                    // Power Automate가 $content 나 body 로 한 번 더 싸서 보낼 때 껍데기 벗기기
-                    base64str = rawImg.$content || rawImg.contentBytes || rawImg.body || "";
-                }
+                if (typeof rawImg === 'string') base64str = rawImg;
+                else if (typeof rawImg === 'object' && rawImg !== null) base64str = rawImg.$content || rawImg.contentBytes || rawImg.body || "";
 
-                // 이미지가 없거나 엑박일 때 보여줄 에러 방지용 기본 안내 이미지
-                const imgSrc = base64str ? `data:image/png;base64,${base64str}` : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect width="400" height="400" fill="%23f8fafc"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="16" fill="%23ef4444">첨부파일(이미지)이 파워오토메이트에 담기지 않았습니다.</text></svg>';
+                const imgSrc = base64str ? `data:image/png;base64,${base64str}` : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect width="400" height="400" fill="%23f8fafc"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="16" fill="%23ef4444">이미지 없음</text></svg>';
                 
                 const html = `
                     <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 p-4 sm:p-6 flex flex-col">
                         <div class="mb-5 text-center">
-                            <h3 class="comic-font text-xl sm:text-2xl text-slate-800 mb-3 break-keep-words">${escapeHtml(displayTitle)}</h3>
+                            <h3 class="comic-font text-xl sm:text-2xl text-slate-800 mb-3 break-keep-words">${escapeHtml(valTitle)}</h3>
                             <div class="flex items-center justify-center gap-2 flex-wrap">
-                                <span class="bg-indigo-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">${escapeHtml(displayTeam)}</span>
+                                <span class="bg-indigo-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">${escapeHtml(valTeam)}</span>
                                 <span class="bg-slate-100 text-slate-700 text-xs font-bold px-3 py-1 rounded-full border border-slate-200">
-                                    <i class="fa-solid fa-user-pen mr-1 text-slate-400"></i>${escapeHtml(displayAuthor)}
+                                    <i class="fa-solid fa-user-pen mr-1 text-slate-400"></i>${escapeHtml(valAuthor)}
                                 </span>
                             </div>
                         </div>
@@ -428,7 +388,6 @@
             });
 
             currentDisplayCount += nextBatch.length;
-
             if (currentDisplayCount >= allGalleryData.length) {
                 loadMoreBtn.classList.add('hidden'); loadMoreBtn.classList.remove('flex');
             } else {
@@ -436,14 +395,10 @@
             }
         }
 
-        // 모달 및 팝업 세팅 (오류 수정 완료)
         function renderParticipationModal() {
             const participatedList = document.getElementById('participatedList');
             const notParticipatedList = document.getElementById('notParticipatedList');
-            
-            // 기존 목록을 비웁니다.
-            participatedList.innerHTML = '';
-            notParticipatedList.innerHTML = '';
+            participatedList.innerHTML = ''; notParticipatedList.innerHTML = '';
             let pCount = 0, npCount = 0;
 
             allTeams.sort().forEach(team => {
@@ -463,11 +418,7 @@
 
             document.getElementById('participatedCount').textContent = pCount;
             document.getElementById('notParticipatedCount').textContent = npCount;
-            
-            // 참여한 팀이 0개일 때만 직접 안내 문구를 그려줍니다.
-            if (pCount === 0) {
-                participatedList.innerHTML = `<p class="text-sm text-slate-400 w-full p-4 bg-slate-50 rounded-lg text-center border border-dashed border-slate-200">아직 참여한 팀이 없습니다.</p>`;
-            }
+            if (pCount === 0) participatedList.innerHTML = `<p class="text-sm text-slate-400 w-full p-4 bg-slate-50 rounded-lg text-center border border-dashed border-slate-200">아직 참여한 팀이 없습니다.</p>`;
         }
 
         function openParticipationModal() { document.getElementById('participationModal').classList.remove('hidden'); document.getElementById('participationModal').classList.add('flex'); renderParticipationModal(); }
@@ -480,9 +431,8 @@
             box.classList.remove('hidden'); box.classList.add('flex');
         }
         function closeMessage() { document.getElementById('messageBox').classList.add('hidden'); document.getElementById('messageBox').classList.remove('flex'); }
-        function escapeHtml(text) { if(!text) return ""; const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }; return text.replace(/[&<>"']/g, m => map[m]); }
+        function escapeHtml(text) { if(!text) return ""; const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }; return String(text).replace(/[&<>"']/g, m => map[m]); }
 
-        // 그림 생성
         document.getElementById('comicForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('generateBtn');
@@ -525,14 +475,13 @@
                 document.getElementById('comicGrid').classList.add('flex');
                 document.getElementById('publishBtn').classList.remove('hidden');
             } catch (error) {
-                console.error(error); showMessage("그림 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.", "error");
+                console.error(error); showMessage("그림 생성 중 오류가 발생했습니다.", "error");
                 document.getElementById('emptyState').classList.remove('hidden');
             } finally {
                 btn.disabled = false; overlay.classList.add('hidden'); overlay.classList.remove('flex');
             }
         });
 
-        // 쉐어포인트로 전송하기
         async function publishToGallery() {
             const comicElement = document.getElementById('comicGrid');
             const title = document.getElementById('webtoonTitle').value.trim() || '비하인드씬';
@@ -555,8 +504,6 @@
 
                 if (response.ok) {
                     showMessage("사내 갤러리에 성공적으로 전시되었습니다! 🎉");
-                    
-                    // 전시 완료 후 서버에서 리스트를 최신화해서 화면을 통째로 갱신!
                     await loadGallery();
 
                     document.getElementById('comicForm').reset();
@@ -565,7 +512,6 @@
                     document.getElementById('comicGrid').classList.remove('flex');
                     document.getElementById('emptyState').classList.remove('hidden');
                     document.getElementById('publishBtn').classList.add('hidden');
-                    
                 } else throw new Error("서버 응답 오류");
             } catch (error) {
                 console.error(error); showMessage("전송 중 오류가 발생했습니다.", "error");
