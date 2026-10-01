@@ -110,7 +110,7 @@
                     
                     <div id="loadingOverlay" class="absolute inset-0 bg-white/90 z-20 hidden flex-col items-center justify-center">
                         <div class="relative"><i class="fa-solid fa-wand-magic-sparkles text-5xl text-indigo-500 animate-bounce mb-4 absolute -left-12 -top-4 opacity-50"></i><i class="fa-solid fa-palette text-6xl text-purple-600 animate-pulse mb-6"></i></div>
-                        <p class="comic-font text-xl text-indigo-900 mb-2">AI 작가가 스케치 하는 중..</p>
+                        <p id="loadingStatusText" class="comic-font text-xl text-indigo-900 mb-2">AI 작가가 스케치 하는 중..</p>
                         <p class="text-sm text-slate-600 font-medium bg-slate-100 px-4 py-1.5 rounded-full">만화가 완성될 때까지 10~20초 정도만 기다려주세요 :)</p>
                         <div class="mt-6 flex space-x-3"><div class="w-3 h-3 bg-indigo-500 rounded-full animate-bounce"></div><div class="w-3 h-3 bg-purple-500 rounded-full animate-bounce" style="animation-delay: 0.1s"></div><div class="w-3 h-3 bg-pink-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div></div>
                     </div>
@@ -141,7 +141,7 @@
         const POST_URL = "https://defaultf8d5ac988fa943558cd984f322fb0a.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/11/workflows/8fdff1b1f0914475ad179f60b5297392/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=uAsxQaH-D8rbf5Ax7U6iK7anSL54EbMcAKLRAIaTiAM";
         const GET_URL = "https://defaultf8d5ac988fa943558cd984f322fb0a.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/00/workflows/c827f633f43249d29cb4117e1ef25621/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=EmAb43RxVmaMh99QF6Wrn0c0OVmru25j0rbqpwl-3Ag";
         
-        // 🚨 여기에 하트 업데이트 URL을 다시 꼭 넣어주세요!
+        // 🚨 아래에 하트 업데이트 URL을 다시 꼭 넣어주세요!
         const LIKE_URL = "https://defaultf8d5ac988fa943558cd984f322fb0a.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/06/workflows/2593a40e7c534e718f7b3631efc1c5ba/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=uFSKF9coTDi6nkjawz24sFOgU-F1pZhnNqdnLf0s7eg"; 
 
         const allTeams = ["K-SOX팀", "개인정보보호팀", "건축TF", "경영기획팀", "구매지원팀", "글로벌소싱팀", "노사기획팀", "노사협력팀", "대외협력팀", "법무팀", "영업관리팀", "인사기획팀", "인재문화팀", "인재확보팀", "재정팀", "총무팀", "커뮤니케이션팀", "컴플라이언스팀", "투자기획팀", "한국조달팀", "회계팀"];
@@ -220,6 +220,7 @@
 
             nextBatch.forEach((item, index) => {
                 let valTitle = item.Title || findData(item, ['title', '제목']) || '제목 없음';
+                const rawTitle = valTitle; 
                 let valTeam = findData(item, ['team', '팀', '소속']);
                 let valAuthor = findData(item, ['author', '작성자', '이름', 'name']);
                 const valImage = findData(item, ['image', '사진', '그림', 'base64', 'imagedata']);
@@ -229,10 +230,7 @@
                 let valHeart = 0;
                 for (let k in item) {
                     if (k.toLowerCase().includes('heart') || k.toLowerCase() === 'likes') {
-                        if (!isNaN(parseInt(item[k]))) {
-                            valHeart = parseInt(item[k]);
-                            break;
-                        }
+                        if (!isNaN(parseInt(item[k]))) { valHeart = parseInt(item[k]); break; }
                     }
                 }
 
@@ -242,8 +240,7 @@
                     const bracketEnd = valTitle.indexOf(']');
                     const metaParts = valTitle.substring(1, bracketEnd).split('|');
                     if (metaParts.length >= 2) {
-                        valTeam = metaParts[0]; 
-                        valAuthor = metaParts[1]; 
+                        valTeam = metaParts[0]; valAuthor = metaParts[1]; 
                     }
                     valTitle = valTitle.substring(bracketEnd + 1).trim();
                 }
@@ -262,8 +259,6 @@
                 
                 const heartColor = isLiked ? 'text-rose-500' : 'text-slate-400';
                 const heartIcon = isLiked ? 'fa-solid fa-heart scale-125' : 'fa-solid fa-heart';
-                
-                // 🚨 2중 안전장치: 암호(팀명|이름)가 완벽하게 조립된 100% 안전한 제목 만들기!
                 const safeReconstructedTitle = `[${finalTeam}|${finalAuthor}] ${finalTitle}`;
 
                 const html = `
@@ -281,7 +276,6 @@
                             </div>
                         </div>
                         <div class="mt-4 flex justify-between items-center px-2 pt-3 border-t border-slate-100">
-                            <!-- 🚨 안전하게 100% 복구된 제목(safeReconstructedTitle)을 서버로 전송합니다. -->
                             <button onclick="likeAction(this, '${valId}', '${escapeHtml(safeReconstructedTitle).replace(/'/g, "\\'")}', ${valHeart}, '${idKey}')" class="group flex items-center gap-1.5 text-sm sm:text-base font-bold ${heartColor} hover:text-rose-500 transition-colors cursor-pointer">
                                 <i class="${heartIcon} transform active:scale-125 transition-transform"></i> 
                                 <span class="like-cnt text-slate-600 group-hover:text-rose-500">${valHeart}</span>
@@ -309,7 +303,6 @@
             const isCurrentlyLiked = btn.classList.contains('text-rose-500'); 
             
             let newLikes;
-            
             if (!isCurrentlyLiked) {
                 newLikes = parseInt(span.textContent) + 1;
                 btn.classList.add('text-rose-500');
@@ -324,17 +317,11 @@
                 icon.classList.remove('scale-125');
                 localStorage.removeItem(idKey);
             }
-            
             span.textContent = newLikes; 
 
             try {
                 if(!LIKE_URL || LIKE_URL.trim() === "") return; 
-                fetch(LIKE_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    // 🚨 이제 파워 오토메이트가 제목을 덮어쓰더라도 절대 깨지지 않는 완벽한 암호 제목을 쏴줍니다.
-                    body: JSON.stringify({ id: parseInt(id), title: reconstructedTitle, heartCount: newLikes })
-                });
+                fetch(LIKE_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: parseInt(id), title: reconstructedTitle, heartCount: newLikes }) });
             } catch (e) { console.error("하트 서버 전송 실패:", e); }
         }
 
@@ -342,14 +329,10 @@
             const card = btn.closest('.bg-white');
             const exportTarget = card.querySelector('.export-target');
             const iconHTML = btn.innerHTML;
-            
             btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i>'; 
-            
             await document.fonts.ready;
-            
             const originalPadding = exportTarget.style.padding;
             exportTarget.style.padding = '24px';
-            
             try {
                 const canvas = await html2canvas(exportTarget, { scale: 2, backgroundColor: '#ffffff' }); 
                 const link = document.createElement('a');
@@ -387,21 +370,41 @@
         function closeMessage() { document.getElementById('messageBox').classList.add('hidden'); document.getElementById('messageBox').classList.remove('flex'); }
         function escapeHtml(text) { if(!text) return ""; const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }; return String(text).replace(/[&<>"']/g, m => map[m]); }
 
+        // 🚨 폼 제출 시 (순차적 병렬 로직으로 구글 과부하 방지 적용)
         document.getElementById('comicForm').addEventListener('submit', async (e) => {
             e.preventDefault(); const btn = document.getElementById('generateBtn'); const overlay = document.getElementById('loadingOverlay');
+            const statusText = document.getElementById('loadingStatusText');
             const title = document.getElementById('webtoonTitle').value.trim(); const team = document.getElementById('teamName').value; const author = document.getElementById('authorName').value.trim();
             if (!title) { showMessage("웹툰 제목을 입력해주세요.", "error"); return; } if (!team) { showMessage("소속 팀을 선택해주세요.", "error"); return; }
             const scenes = [], dialogues = []; for(let i=1; i<=4; i++) { scenes.push(document.getElementById(`scene${i}`).value.trim()); dialogues.push(document.getElementById(`dialogue${i}`).value.trim()); }
+            
             btn.disabled = true; overlay.classList.remove('hidden'); overlay.classList.add('flex');
+            
             try {
-                const imagePromises = scenes.map(scene => generateImageWithRetry(scene)); const base64Images = await Promise.all(imagePromises);
+                const base64Images = [];
+                // 🚨 4장을 동시에 요청해서 구글 서버가 뻗는 현상을 막기 위해 1장씩 차례대로 그립니다.
+                for (let i = 0; i < 4; i++) {
+                    statusText.textContent = `AI 작가가 스케치 하는 중.. (${i + 1}/4컷 완성)`;
+                    const img = await generateImageWithRetry(scenes[i]);
+                    base64Images.push(img);
+                    await new Promise(r => setTimeout(r, 500)); // 서버 안정을 위해 0.5초 대기
+                }
+                statusText.textContent = "거의 다 되었습니다! 마무리 중...";
+
                 document.getElementById('previewTitle').textContent = title; 
                 document.getElementById('previewTeamLabel').innerHTML = escapeHtml(team); 
                 document.getElementById('previewAuthorLabel').innerHTML = `<i class="fa-solid fa-user-pen mr-1 text-slate-400"></i>${escapeHtml(author)}`;
                 for(let i=0; i<4; i++){ document.getElementById(`preview-scene-${i+1}`).textContent = scenes[i]; document.getElementById(`preview-img-${i+1}`).src = base64Images[i]; document.getElementById(`preview-dialogue-${i+1}`).textContent = dialogues[i]; }
                 document.getElementById('comicGrid').classList.remove('hidden'); document.getElementById('comicGrid').classList.add('flex'); document.getElementById('publishBtn').classList.remove('hidden');
                 document.getElementById('emptyState').classList.add('hidden');
-            } catch (error) { console.error(error); showMessage("그림 생성 오류", "error"); } finally { btn.disabled = false; overlay.classList.add('hidden'); overlay.classList.remove('flex'); }
+            } catch (error) { 
+                console.error(error); 
+                // 🚨 민감 단어 필터링 차단 시 친절하게 안내하도록 메시지 업그레이드
+                showMessage("그림 생성 실패! AI가 그리기 어려운 내용(정책 위반 등)이 포함되었을 수 있습니다. 단어를 조금 순화해서 다시 시도해주세요.", "error"); 
+            } finally { 
+                btn.disabled = false; overlay.classList.add('hidden'); overlay.classList.remove('flex'); 
+                statusText.textContent = "AI 작가가 스케치 하는 중..";
+            }
         });
 
         async function publishToGallery() {
@@ -434,9 +437,21 @@
             const fallbackStyle = "Masterpiece, trending high-quality Korean webtoon style, beautiful and attractive character design, bright and vivid colors, cel shading, highly readable and eye-catching composition, expressive emotions, modern office background. NO TEXT, NO WORDS, NO SPEECH BUBBLES. Situation: ";
             try {
                 const response = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ "contents": [{ "parts": [{ "text": fallbackStyle + sceneText }] }], "generationConfig": { "responseModalities": ["IMAGE"], "imageConfig": { "aspectRatio": "1:1" } } }) });
-                if (!response.ok) throw new Error("API Error"); const data = await response.json(); const part = data?.candidates?.[0]?.content?.parts?.find(p => p.inlineData);
-                if (part) return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`; throw new Error("No image data");
-            } catch (error) { if (retries > 0) { await new Promise(res => setTimeout(res, 2000)); return generateImageWithRetry(sceneText, retries - 1); } else throw error; }
+                if (!response.ok) throw new Error("API Error"); 
+                const data = await response.json(); 
+                
+                // 구글 AI 필터링에 걸린 경우 에러 발생시키기
+                if (data.promptFeedback && data.promptFeedback.blockReason) throw new Error("SAFETY_BLOCKED");
+                if (data.candidates && data.candidates[0].finishReason === 'SAFETY') throw new Error("SAFETY_BLOCKED");
+
+                const part = data?.candidates?.[0]?.content?.parts?.find(p => p.inlineData);
+                if (part) return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`; 
+                throw new Error("No image data");
+            } catch (error) { 
+                if (error.message === "SAFETY_BLOCKED") throw error; // 단어 차단은 재시도하지 않고 바로 사용자에게 안내
+                if (retries > 0) { await new Promise(res => setTimeout(res, 2000)); return generateImageWithRetry(sceneText, retries - 1); } 
+                else throw error; 
+            }
         }
 
         window.addEventListener('DOMContentLoaded', initApp);
