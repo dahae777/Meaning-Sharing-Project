@@ -224,8 +224,18 @@
                 let valAuthor = findData(item, ['author', '작성자', '이름', 'name']);
                 const valImage = findData(item, ['image', '사진', '그림', 'base64', 'imagedata']);
                 
-                let valId = item.ID || item.Id || item.id;
-                let valHeart = parseInt(item.HeartCount || 0);
+                // 🚨 고유 ID와 하트 수를 무조건 찾아내는 강력한 탐색기 도입!
+                let valId = item.ID || item.Id || item.id || item.OData__ID || index;
+                
+                let valHeart = 0;
+                for (let k in item) {
+                    if (k.toLowerCase().includes('heart') || k.toLowerCase() === 'likes') {
+                        if (!isNaN(parseInt(item[k]))) {
+                            valHeart = parseInt(item[k]);
+                            break;
+                        }
+                    }
+                }
 
                 if (typeof valAuthor === 'string' && valAuthor.includes('i:0#')) valAuthor = '';
 
@@ -248,8 +258,9 @@
                 const fallbackSvg = encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect width="100%" height="100%" fill="#f1f5f9"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="16" font-weight="bold" fill="#94a3b8">이미지 없음</text></svg>');
                 const imgSrc = valImage ? `data:image/jpeg;base64,${valImage}` : `data:image/svg+xml;utf8,${fallbackSvg}`;
                 
-                const idKey = (finalTitle + finalTeam).replace(/\s/g, '');
-                let isLiked = localStorage.getItem('liked_' + idKey) === 'true';
+                // 🚨 내가 누른 하트를 '고유 ID' 기준으로 영구 기억하도록 수정!
+                const idKey = 'heart_' + valId;
+                let isLiked = localStorage.getItem(idKey) === 'true';
                 
                 const heartColor = isLiked ? 'text-rose-500' : 'text-slate-400';
                 const heartIcon = isLiked ? 'fa-solid fa-heart scale-125' : 'fa-solid fa-heart';
@@ -269,7 +280,6 @@
                             </div>
                         </div>
                         <div class="mt-4 flex justify-between items-center px-2 pt-3 border-t border-slate-100">
-                            <!-- 🚨 좋아요 / 좋아요 취소가 자유롭게 되도록 로직 수정 -->
                             <button onclick="likeAction(this, '${valId}', '${escapeHtml(finalTitle).replace(/'/g, "\\'")}', ${valHeart}, '${idKey}')" class="group flex items-center gap-1.5 text-sm sm:text-base font-bold ${heartColor} hover:text-rose-500 transition-colors cursor-pointer">
                                 <i class="${heartIcon} transform active:scale-125 transition-transform"></i> 
                                 <span class="like-cnt text-slate-600 group-hover:text-rose-500">${valHeart}</span>
@@ -291,32 +301,30 @@
             else { loadMoreBtn.classList.remove('hidden'); loadMoreBtn.classList.add('flex'); }
         }
 
-        // 🚨 자유로운 하트 토글(On/Off) 로직으로 완벽 업그레이드!
         async function likeAction(btn, id, title, currentServerLikes, idKey) {
             const span = btn.querySelector('.like-cnt');
             const icon = btn.querySelector('i');
-            const isCurrentlyLiked = btn.classList.contains('text-rose-500'); // 현재 상태 확인
+            const isCurrentlyLiked = btn.classList.contains('text-rose-500'); 
             
             let newLikes;
             
             if (!isCurrentlyLiked) {
-                // 하트 누르기 (+1)
+                // 🚨 로컬스토리지 키값도 찰떡같이 업데이트!
                 newLikes = parseInt(span.textContent) + 1;
                 btn.classList.add('text-rose-500');
                 btn.classList.remove('text-slate-400');
                 icon.classList.add('scale-125');
-                localStorage.setItem('liked_' + idKey, 'true');
+                localStorage.setItem(idKey, 'true');
             } else {
-                // 하트 취소하기 (-1)
                 newLikes = parseInt(span.textContent) - 1;
-                if(newLikes < 0) newLikes = 0; // 마이너스 방지
+                if(newLikes < 0) newLikes = 0; 
                 btn.classList.remove('text-rose-500');
                 btn.classList.add('text-slate-400');
                 icon.classList.remove('scale-125');
-                localStorage.removeItem('liked_' + idKey);
+                localStorage.removeItem(idKey);
             }
             
-            span.textContent = newLikes; // 화면 즉시 업데이트
+            span.textContent = newLikes; 
 
             try {
                 if(!LIKE_URL || LIKE_URL.trim() === "") return; 
