@@ -111,7 +111,7 @@
                     <div id="loadingOverlay" class="absolute inset-0 bg-white/90 z-20 hidden flex-col items-center justify-center">
                         <div class="relative"><i class="fa-solid fa-wand-magic-sparkles text-5xl text-indigo-500 animate-bounce mb-4 absolute -left-12 -top-4 opacity-50"></i><i class="fa-solid fa-palette text-6xl text-purple-600 animate-pulse mb-6"></i></div>
                         <p id="loadingStatusText" class="comic-font text-xl text-indigo-900 mb-2">AI 작가가 스케치 하는 중..</p>
-                        <p class="text-sm text-slate-600 font-medium bg-slate-100 px-4 py-1.5 rounded-full">만화가 완성될 때까지 조금만 기다려주세요 :)</p>
+                        <p class="text-sm text-slate-600 font-medium bg-slate-100 px-4 py-1.5 rounded-full">동시 접속자가 많아 평소보다 조금 더 걸릴 수 있어요 :)</p>
                         <div class="mt-6 flex space-x-3"><div class="w-3 h-3 bg-indigo-500 rounded-full animate-bounce"></div><div class="w-3 h-3 bg-purple-500 rounded-full animate-bounce" style="animation-delay: 0.1s"></div><div class="w-3 h-3 bg-pink-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div></div>
                     </div>
                 </div>
@@ -137,15 +137,29 @@
     <div id="messageBox" class="fixed inset-0 z-[60] hidden items-center justify-center bg-black/50"><div class="bg-white p-6 rounded-2xl max-w-sm w-full mx-4 text-center"><i id="msgIcon" class="fa-solid fa-circle-check text-4xl mb-4"></i><p id="msgText" class="font-medium mb-6 text-lg"></p><button onclick="closeMessage()" class="w-full bg-indigo-600 text-white font-bold py-2.5 rounded-xl">확인</button></div></div>
 
     <script>
-        const API_KEY = "AQ.Ab8RN6IU8ua2z_qdgo73UIYrsX6zjVXvOZVRVAOS9F2wJ77uSg"; 
+        // 🚨 긴급 화재 진압용 다중 API 키 (동료분들께 받은 키를 쉼표로 구분해서 따옴표 안에 넣어주세요!)
+        const API_KEYS = [
+            "AQ.Ab8RN6IU8ua2z_qdgo73UIYrsX6zjVXvOZVRVAOS9F2wJ77uSg", // 기존 다해님 키
+            "AQ.Ab8RN6JX2Jykg4XeVCTdgMXN8IJpyOfjQ8sGoLDzEZv-KTQSfg", // 새 키 1 (선택)
+        ];
+
+        // 🚨 여기에 하트 업데이트 파워 오토메이트 URL을 다시 넣어주세요!
+        const LIKE_URL = "https://defaultf8d5ac988fa943558cd984f322fb0a.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/06/workflows/2593a40e7c534e718f7b3631efc1c5ba/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=uFSKF9coTDi6nkjawz24sFOgU-F1pZhnNqdnLf0s7eg"; 
+
         const POST_URL = "https://defaultf8d5ac988fa943558cd984f322fb0a.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/11/workflows/8fdff1b1f0914475ad179f60b5297392/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=uAsxQaH-D8rbf5Ax7U6iK7anSL54EbMcAKLRAIaTiAM";
         const GET_URL = "https://defaultf8d5ac988fa943558cd984f322fb0a.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/00/workflows/c827f633f43249d29cb4117e1ef25621/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=EmAb43RxVmaMh99QF6Wrn0c0OVmru25j0rbqpwl-3Ag";
         
-        // 🚨 여기에 파워 오토메이트 하트 업데이트 URL을 다시 꼭 넣어주세요!
-        const LIKE_URL = "https://defaultf8d5ac988fa943558cd984f322fb0a.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/06/workflows/2593a40e7c534e718f7b3631efc1c5ba/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=uFSKF9coTDi6nkjawz24sFOgU-F1pZhnNqdnLf0s7eg"; 
-
         const allTeams = ["K-SOX팀", "개인정보보호팀", "건축TF", "경영기획팀", "구매지원팀", "글로벌소싱팀", "노사기획팀", "노사협력팀", "대외협력팀", "법무팀", "영업관리팀", "인사기획팀", "인재문화팀", "인재확보팀", "재정팀", "총무팀", "커뮤니케이션팀", "컴플라이언스팀", "투자기획팀", "한국조달팀", "회계팀"];
         let participatedTeams = new Set(); let allGalleryData = []; let currentDisplayCount = 0; const ITEMS_PER_PAGE = 4; 
+
+        // 사용 가능한 키를 순환하며 분산시키는 로직
+        const validKeys = API_KEYS.filter(k => k && k.trim() !== "");
+        let currentKeyIndex = Math.floor(Math.random() * validKeys.length);
+        function getNextApiKey() {
+            const key = validKeys[currentKeyIndex];
+            currentKeyIndex = (currentKeyIndex + 1) % validKeys.length;
+            return key;
+        }
 
         function initApp() {
             const teamSelect = document.getElementById('teamName');
@@ -307,7 +321,6 @@
         function closeMessage() { document.getElementById('messageBox').classList.add('hidden'); document.getElementById('messageBox').classList.remove('flex'); }
         function escapeHtml(text) { if(!text) return ""; const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }; return String(text).replace(/[&<>"']/g, m => map[m]); }
 
-        // 🚨 제출 버튼 로직: 구글 서버가 뻗지 않도록 중간중간 2.5초씩 휴식(Delay)을 넣었습니다!
         document.getElementById('comicForm').addEventListener('submit', async (e) => {
             e.preventDefault(); const btn = document.getElementById('generateBtn'); const overlay = document.getElementById('loadingOverlay'); const statusText = document.getElementById('loadingStatusText');
             const title = document.getElementById('webtoonTitle').value.trim(); const team = document.getElementById('teamName').value; const author = document.getElementById('authorName').value.trim();
@@ -318,12 +331,12 @@
             
             try {
                 const base64Images = [];
-                // 🚨 4장을 한꺼번에 요청하면 튕기므로, 1장 완성 후 2.5초 대기하고 다음 장을 요청합니다.
                 for (let i = 0; i < 4; i++) {
                     statusText.textContent = `AI 작가가 스케치 하는 중.. (${i + 1}/4컷 완성)`;
                     const img = await generateImageWithRetry(scenes[i]);
                     base64Images.push(img);
-                    if (i < 3) await new Promise(r => setTimeout(r, 2500)); // 2.5초 딜레이 (속도 제한 원천 차단)
+                    // 🚨 컷 생성 후 대기 시간을 3.5초로 넉넉하게 늘렸습니다.
+                    if (i < 3) await new Promise(r => setTimeout(r, 3500)); 
                 }
                 statusText.textContent = "거의 다 되었습니다! 마무리 중...";
 
@@ -332,11 +345,10 @@
                 document.getElementById('comicGrid').classList.remove('hidden'); document.getElementById('comicGrid').classList.add('flex'); document.getElementById('publishBtn').classList.remove('hidden'); document.getElementById('emptyState').classList.add('hidden');
             } catch (error) { 
                 console.error(error); 
-                // 🚨 에러 원인에 따라 팝업 메시지를 정확하게 분리했습니다!
                 if (error.message === "SAFETY_BLOCKED") {
                     showMessage("그림 생성 실패! AI가 그리기 어려운 내용(정책 위반 등)이 포함되었을 수 있습니다. 단어를 조금 순화해서 다시 시도해주세요.", "error"); 
                 } else {
-                    showMessage("현재 동시 접속자가 많아 AI 서버에 과부하가 걸렸습니다 😭 약 15초 정도 넉넉히 기다리신 후 다시 생성 버튼을 눌러주세요!", "error");
+                    showMessage("현재 동시 접속자가 많아 AI 서버 대기열이 발생했습니다. 15초 정도 넉넉히 기다리신 후 다시 생성 버튼을 눌러주세요!", "error");
                 }
             } finally { 
                 btn.disabled = false; overlay.classList.add('hidden'); overlay.classList.remove('flex'); statusText.textContent = "AI 작가가 스케치 하는 중..";
@@ -354,29 +366,44 @@
             } catch (error) { console.error(error); showMessage("전송 중 오류 발생", "error"); } finally { document.getElementById('publishBtn').disabled = false; }
         }
 
-        // 🚨 튕기면 포기하지 않고 4초를 더 쉰 다음 다시 그림을 몰래 재요청하는 강화된 복구 로직!
-        async function generateImageWithRetry(sceneText, retries = 3) {
-            const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${API_KEY}`;
+        // 🚨 재시도 횟수를 대폭 늘리고 키를 돌려쓰며 완벽하게 방어합니다.
+        async function generateImageWithRetry(sceneText, retries = 5) {
             const fallbackStyle = "Masterpiece, trending high-quality Korean webtoon style, beautiful and attractive character design, bright and vivid colors, cel shading, highly readable and eye-catching composition, expressive emotions, modern office background. NO TEXT, NO WORDS, NO SPEECH BUBBLES. Situation: ";
-            try {
-                const response = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ "contents": [{ "parts": [{ "text": fallbackStyle + sceneText }] }], "generationConfig": { "responseModalities": ["IMAGE"], "imageConfig": { "aspectRatio": "1:1" } } }) });
-                if (!response.ok) {
-                    if (response.status === 429) throw new Error("RATE_LIMIT"); // 속도 제한 에러 식별
-                    throw new Error("API Error"); 
-                }
-                const data = await response.json(); 
-                if (data.promptFeedback && data.promptFeedback.blockReason) throw new Error("SAFETY_BLOCKED");
-                if (data.candidates && data.candidates[0].finishReason === 'SAFETY') throw new Error("SAFETY_BLOCKED");
-                const part = data?.candidates?.[0]?.content?.parts?.find(p => p.inlineData);
-                if (part) return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`; 
-                throw new Error("No image data");
-            } catch (error) { 
-                if (error.message === "SAFETY_BLOCKED") throw error; // 단어 차단은 재시도 없이 바로 경고창
-                if (retries > 0) { 
-                    await new Promise(res => setTimeout(res, 4000)); // 🚨 에러 발생 시 4초 푹 쉬고 다시 시도!
-                    return generateImageWithRetry(sceneText, retries - 1); 
-                } else {
-                    throw error; 
+            
+            for (let attempt = 0; attempt <= retries; attempt++) {
+                const currentKey = getNextApiKey(); // 사용 가능한 API 키 중 하나를 꺼내서 사용
+                const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${currentKey}`;
+                
+                try {
+                    const response = await fetch(API_URL, { 
+                        method: 'POST', 
+                        headers: { 'Content-Type': 'application/json' }, 
+                        body: JSON.stringify({ 
+                            "contents": [{ "parts": [{ "text": fallbackStyle + sceneText }] }], 
+                            "generationConfig": { "responseModalities": ["IMAGE"], "imageConfig": { "aspectRatio": "1:1" } } 
+                        }) 
+                    });
+                    
+                    if (!response.ok) {
+                        if (response.status === 429) throw new Error("RATE_LIMIT");
+                        throw new Error("API Error"); 
+                    }
+                    const data = await response.json(); 
+                    if (data.promptFeedback && data.promptFeedback.blockReason) throw new Error("SAFETY_BLOCKED");
+                    if (data.candidates && data.candidates[0].finishReason === 'SAFETY') throw new Error("SAFETY_BLOCKED");
+                    
+                    const part = data?.candidates?.[0]?.content?.parts?.find(p => p.inlineData);
+                    if (part) return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`; 
+                    throw new Error("No image data");
+                    
+                } catch (error) { 
+                    if (error.message === "SAFETY_BLOCKED") throw error; // 단어 차단은 재시도 안함
+                    if (attempt < retries) { 
+                        console.warn(`[과부하] 다른 API 키로 변경하여 재시도합니다... (${attempt+1}/${retries})`);
+                        await new Promise(res => setTimeout(res, 3500)); // 3.5초 대기 후 다른 키로 찌르기
+                    } else {
+                        throw error; 
+                    }
                 }
             }
         }
