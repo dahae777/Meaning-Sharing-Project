@@ -59,21 +59,39 @@
                 </div>
                 <div id="previewArea" class="flex-grow flex items-center justify-center bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl relative overflow-hidden min-h-[500px] p-2 md:p-6">
                     <div id="emptyState" class="text-center text-slate-400 p-6"><i class="fa-regular fa-face-smile-wink text-5xl mb-3"></i><p>폼을 작성하면 웹툰이 완성됩니다!</p></div>
+                    
                     <div id="comicGrid" class="hidden w-full h-full flex-col items-center">
-                        <div class="text-center mb-5"><h3 id="previewTitle" class="comic-font text-2xl text-slate-800 mb-3 break-keep-words"></h3><div class="flex gap-2"><span id="previewTeamLabel" class="bg-indigo-600 text-white text-xs px-3 py-1 rounded-full"></span><span id="previewAuthorLabel" class="bg-slate-200 text-slate-700 text-xs px-3 py-1 rounded-full"></span></div></div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 w-full max-w-2xl bg-slate-800 p-3 rounded-xl shadow-2xl">
+                        <div class="text-center mb-5">
+                            <h3 id="previewTitle" class="comic-font text-2xl text-slate-800 mb-3 break-keep-words"></h3>
+                            <div class="flex justify-center gap-2 mb-2">
+                                <span id="previewTeamLabel" class="bg-indigo-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm"></span>
+                                <span id="previewAuthorLabel" class="bg-slate-200 text-slate-700 text-xs font-bold px-3 py-1 rounded-full shadow-sm"></span>
+                            </div>
+                        </div>
+                        
+                        <!-- 🚨 딱 이 4컷 영역(captureArea)만 사진으로 저장되어 중복을 방지합니다! -->
+                        <!-- 🚨 말풍선(p 태그)에 고정 높이와 자르기 속성을 없애서 글씨가 안 잘립니다! -->
+                        <div id="captureArea" class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 w-full max-w-2xl mx-auto bg-slate-800 p-3 md:p-4 rounded-xl shadow-2xl">
                             <script>
                                 for(let i=1; i<=4; i++) {
                                     document.write(`
                                     <div class="flex flex-col bg-white rounded-lg border-2 border-slate-700 h-full">
-                                        <div class="bg-indigo-50/80 p-2 relative flex items-center justify-center h-14 overflow-hidden"><span class="absolute top-1.5 left-1.5 bg-amber-400 text-[10px] font-black px-1.5 py-0.5 rounded-sm">#${i}</span><span id="preview-scene-${i}" class="text-[10px] sm:text-xs font-bold text-center w-full pl-5 pr-1 line-clamp-2"></span></div>
-                                        <div class="w-full bg-slate-200 shrink-0"><img id="preview-img-${i}" class="w-full h-auto aspect-square object-cover" src=""></div>
-                                        <div class="p-2 border-t h-20 flex items-center justify-center overflow-hidden"><p id="preview-dialogue-${i}" class="comic-font text-[10px] sm:text-sm text-center w-full line-clamp-3"></p></div>
+                                        <div class="bg-indigo-50/80 p-2 sm:p-3 relative flex items-center justify-center min-h-[3rem]">
+                                            <span class="absolute top-1.5 left-1.5 bg-amber-400 text-[10px] font-black px-1.5 py-0.5 rounded-sm leading-none">#${i}</span>
+                                            <span id="preview-scene-${i}" class="text-[10px] sm:text-xs font-bold text-center w-full pl-6 pr-1 break-words"></span>
+                                        </div>
+                                        <div class="w-full bg-slate-200 shrink-0">
+                                            <img id="preview-img-${i}" class="w-full h-auto aspect-square object-cover block" src="">
+                                        </div>
+                                        <div class="p-2 sm:p-3 border-t border-slate-100 bg-white min-h-[4rem] flex items-center justify-center">
+                                            <p id="preview-dialogue-${i}" class="comic-font text-[10px] sm:text-sm text-center break-words w-full"></p>
+                                        </div>
                                     </div>`);
                                 }
                             </script>
                         </div>
                     </div>
+                    
                     <div id="loadingOverlay" class="absolute inset-0 bg-white/90 z-20 hidden flex-col items-center justify-center"><i class="fa-solid fa-palette text-6xl text-purple-600 animate-pulse mb-6"></i><p class="comic-font text-xl">AI 작가가 스케치하는 중...</p></div>
                 </div>
             </div>
@@ -88,7 +106,7 @@
                     <div id="emptyGalleryMsg" class="col-span-full flex flex-col items-center justify-center text-slate-400 py-16 bg-slate-50 rounded-xl border-2 border-dashed"><i class="fa-solid fa-spinner animate-spin text-4xl mb-3"></i><p>사내 갤러리 작품을 불러오는 중입니다...</p></div>
                 </div>
                 <div id="loadMoreContainer" class="hidden flex justify-center mt-10">
-                    <button onclick="renderGalleryPage()" class="border-2 border-indigo-100 text-indigo-600 font-bold py-3 px-8 rounded-full">더 많은 작품 감상하기</button>
+                    <button onclick="renderGalleryPage()" class="border-2 border-indigo-100 text-indigo-600 font-bold py-3 px-8 rounded-full hover:bg-indigo-50 transition-colors">더 많은 작품 감상하기</button>
                 </div>
             </div>
         </section>
@@ -114,7 +132,11 @@
         async function loadGallery() {
             if (!GET_URL || !GET_URL.trim().startsWith("http")) return;
             try {
-                const response = await fetch(GET_URL.trim()); 
+                // 🚨 캐시 무시: 웹사이트가 항상 최신 쉐어포인트 데이터를 가져오도록 시간값을 붙입니다.
+                const cacheBuster = `&_t=${new Date().getTime()}`;
+                const fetchUrl = GET_URL.trim().includes('?') ? GET_URL.trim() + cacheBuster : GET_URL.trim() + '?' + cacheBuster;
+                
+                const response = await fetch(fetchUrl); 
                 if (!response.ok) throw new Error(`서버 에러 ${response.status}`);
                 let data = await response.json();
                 
@@ -154,12 +176,30 @@
             }
 
             nextBatch.forEach(item => {
-                const valTitle = item.Title || findData(item, ['title', '제목']) || '제목 없음';
-                const valTeam = findData(item, ['team', '팀', '소속']) || '팀 없음';
-                const valAuthor = findData(item, ['author', '작성자', '이름', 'name']) || '작성자 미상';
+                let valTitle = item.Title || findData(item, ['title', '제목']) || '제목 없음';
+                let valTeam = findData(item, ['team', '팀', '소속']);
+                let valAuthor = findData(item, ['author', '작성자', '이름', 'name']);
                 const valImage = findData(item, ['image', '사진', '그림', 'base64', 'imagedata']);
 
-                if(valTeam !== '팀 없음') participatedTeams.add(valTeam);
+                // 🚨 암호 해독기: 제목에 숨겨둔 [팀명|작성자]를 쪼개서 예쁘게 표시합니다!
+                if (valTitle.startsWith('[') && valTitle.includes(']')) {
+                    const bracketEnd = valTitle.indexOf(']');
+                    const metaParts = valTitle.substring(1, bracketEnd).split('|');
+                    if (metaParts.length >= 2) {
+                        if (!valTeam) valTeam = metaParts[0];
+                        if (!valAuthor) valAuthor = metaParts[1];
+                    }
+                    valTitle = valTitle.substring(bracketEnd + 1).trim();
+                }
+
+                // 불필요한 시스템 이메일 표시 방지
+                if (typeof valAuthor === 'string' && valAuthor.includes('i:0#')) valAuthor = '';
+
+                const finalTitle = valTitle || '제목 없음';
+                const finalTeam = valTeam || '팀 없음';
+                const finalAuthor = valAuthor || '작성자 미상';
+
+                if(finalTeam !== '팀 없음') participatedTeams.add(finalTeam);
 
                 const fallbackSvg = encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect width="100%" height="100%" fill="#f1f5f9"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="16" font-weight="bold" fill="#94a3b8">이미지 없음</text></svg>');
                 const imgSrc = valImage ? `data:image/jpeg;base64,${valImage}` : `data:image/svg+xml;utf8,${fallbackSvg}`;
@@ -167,10 +207,10 @@
                 const html = `
                     <div class="bg-white border rounded-2xl shadow-md p-4 flex flex-col">
                         <div class="mb-5 text-center">
-                            <h3 class="comic-font text-xl mb-3 break-keep-words">${escapeHtml(valTitle)}</h3>
+                            <h3 class="comic-font text-xl mb-3 break-keep-words">${escapeHtml(finalTitle)}</h3>
                             <div class="flex justify-center gap-2">
-                                <span class="bg-indigo-600 text-white text-xs px-3 py-1 rounded-full">${escapeHtml(valTeam)}</span>
-                                <span class="bg-slate-100 text-slate-700 text-xs px-3 py-1 rounded-full">${escapeHtml(valAuthor)}</span>
+                                <span class="bg-indigo-600 text-white text-xs px-3 py-1 rounded-full">${escapeHtml(finalTeam)}</span>
+                                <span class="bg-slate-100 text-slate-700 text-xs px-3 py-1 rounded-full">${escapeHtml(finalAuthor)}</span>
                             </div>
                         </div>
                         <div class="w-full bg-slate-100 rounded-xl overflow-hidden shrink-0"><img class="w-full h-auto block" src="${imgSrc}" alt="웹툰"></div>
@@ -221,14 +261,30 @@
         });
 
         async function publishToGallery() {
-            const comicElement = document.getElementById('comicGrid'); const title = document.getElementById('webtoonTitle').value.trim(); const team = document.getElementById('teamName').value; const author = document.getElementById('authorName').value.trim();
+            // 🚨 중복 방지: 제목을 뺀 'captureArea(4컷 격자)'만 사진을 찍습니다.
+            const captureArea = document.getElementById('captureArea'); 
+            const title = document.getElementById('webtoonTitle').value.trim() || '비하인드씬'; 
+            const team = document.getElementById('teamName').value; 
+            const author = document.getElementById('authorName').value.trim();
+            
+            // 🚨 암호화 패킹: 제목 칸에 팀명과 작성자를 숨겨 보냅니다. (쉐어포인트 열 누락 완벽 방어)
+            const packedTitle = `[${team}|${author}] ${title}`;
+
             showMessage("갤러리로 전송 중입니다..."); document.getElementById('publishBtn').disabled = true;
             try {
-                const canvas = await html2canvas(comicElement, { scale: 1, backgroundColor: '#f8fafc' }); 
-                const base64Data = canvas.toDataURL('image/jpeg', 0.5).split(',')[1];
+                const canvas = await html2canvas(captureArea, { scale: 1.5, backgroundColor: '#1e293b' }); 
+                const base64Data = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
                 
-                const response = await fetch(POST_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title, team, author, imageB64: base64Data }) });
-                if (response.ok) { showMessage("성공적으로 전시되었습니다! 🎉"); await loadGallery(); document.getElementById('comicForm').reset(); document.getElementById('comicGrid').classList.add('hidden'); document.getElementById('comicGrid').classList.remove('flex'); document.getElementById('emptyState').classList.remove('hidden'); document.getElementById('publishBtn').classList.add('hidden'); } else throw new Error("서버 오류");
+                const response = await fetch(POST_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: packedTitle, team, author, imageB64: base64Data }) });
+                if (response.ok) { 
+                    showMessage("성공적으로 전시되었습니다! 🎉"); 
+                    
+                    // 🚨 속도 해결: 쉐어포인트가 저장할 시간을 2.5초간 충분히 기다려줍니다.
+                    await new Promise(r => setTimeout(r, 2500)); 
+                    await loadGallery(); 
+                    
+                    document.getElementById('comicForm').reset(); document.getElementById('comicGrid').classList.add('hidden'); document.getElementById('comicGrid').classList.remove('flex'); document.getElementById('emptyState').classList.remove('hidden'); document.getElementById('publishBtn').classList.add('hidden'); 
+                } else throw new Error("서버 오류");
             } catch (error) { console.error(error); showMessage("전송 중 오류 발생", "error"); } finally { document.getElementById('publishBtn').disabled = false; }
         }
 
