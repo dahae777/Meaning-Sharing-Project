@@ -21,7 +21,7 @@
         <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
             <div class="flex items-center space-x-3">
                 <div class="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center text-white text-2xl shadow-md"><i class="fa-solid fa-book-open"></i></div>
-                <div><h1 class="comic-font text-2xl text-indigo-900 tracking-tight">우리 팀 4컷 만화 비하인드 씬</h1><p class="text-xs text-slate-500 font-medium">경영지원본부 일의 의미 찾기 프로젝트</p></div>
+                <div><h1 class="comic-font text-2xl text-indigo-900 tracking-tight">우리 팀 AI 네컷 만화 제작소</h1><p class="text-xs text-slate-500 font-medium">경영지원본부 일의 의미 찾기 프로젝트</p></div>
             </div>
             <button onclick="openParticipationModal()" class="bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 font-bold py-2 px-4 rounded-full shadow-sm transition-colors flex items-center gap-2"><i class="fa-solid fa-chart-pie text-indigo-500"></i> 조직 참여 현황</button>
         </div>
@@ -127,7 +127,7 @@
                 currentDisplayCount = 0;
                 
                 if (allGalleryData.length === 0) {
-                    document.getElementById('galleryGrid').innerHTML = `<p class="col-span-full text-center text-slate-500 py-10 font-bold">아직 전시된 작품이 없습니다.</p>`; return;
+                    document.getElementById('galleryGrid').innerHTML = `<p class="col-span-full text-center text-slate-500 py-10 font-bold">아직 전시된 작품이 없습니다.<br>첫 번째 작가가 되어주세요!</p>`; return;
                 }
                 
                 renderParticipationModal(); renderGalleryPage();
@@ -142,7 +142,6 @@
             const loadMoreBtn = document.getElementById('loadMoreContainer');
             const nextBatch = allGalleryData.slice(currentDisplayCount, currentDisplayCount + ITEMS_PER_PAGE);
 
-            // 💡 무적의 데이터 탐색기: 열 이름이 뭐든 간에 다 찾아냅니다.
             function findData(obj, keywords) {
                 for (let key of Object.keys(obj)) {
                     for (let kw of keywords) {
@@ -163,7 +162,7 @@
                 if(valTeam !== '팀 없음') participatedTeams.add(valTeam);
 
                 const fallbackSvg = encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect width="100%" height="100%" fill="#f1f5f9"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="16" font-weight="bold" fill="#94a3b8">이미지 없음</text></svg>');
-                const imgSrc = valImage ? `data:image/png;base64,${valImage}` : `data:image/svg+xml;utf8,${fallbackSvg}`;
+                const imgSrc = valImage ? `data:image/jpeg;base64,${valImage}` : `data:image/svg+xml;utf8,${fallbackSvg}`;
                 
                 const html = `
                     <div class="bg-white border rounded-2xl shadow-md p-4 flex flex-col">
@@ -180,7 +179,6 @@
                 gallery.insertAdjacentHTML('beforeend', html);
             });
 
-            // 현황판 실시간 갱신
             renderParticipationModal();
 
             currentDisplayCount += nextBatch.length;
@@ -226,7 +224,9 @@
             const comicElement = document.getElementById('comicGrid'); const title = document.getElementById('webtoonTitle').value.trim(); const team = document.getElementById('teamName').value; const author = document.getElementById('authorName').value.trim();
             showMessage("갤러리로 전송 중입니다..."); document.getElementById('publishBtn').disabled = true;
             try {
-                const canvas = await html2canvas(comicElement, { scale: 2, backgroundColor: '#f8fafc' }); const base64Data = canvas.toDataURL('image/png').split(',')[1];
+                const canvas = await html2canvas(comicElement, { scale: 1, backgroundColor: '#f8fafc' }); 
+                const base64Data = canvas.toDataURL('image/jpeg', 0.5).split(',')[1];
+                
                 const response = await fetch(POST_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title, team, author, imageB64: base64Data }) });
                 if (response.ok) { showMessage("성공적으로 전시되었습니다! 🎉"); await loadGallery(); document.getElementById('comicForm').reset(); document.getElementById('comicGrid').classList.add('hidden'); document.getElementById('comicGrid').classList.remove('flex'); document.getElementById('emptyState').classList.remove('hidden'); document.getElementById('publishBtn').classList.add('hidden'); } else throw new Error("서버 오류");
             } catch (error) { console.error(error); showMessage("전송 중 오류 발생", "error"); } finally { document.getElementById('publishBtn').disabled = false; }
