@@ -141,7 +141,7 @@
         const POST_URL = "https://defaultf8d5ac988fa943558cd984f322fb0a.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/11/workflows/8fdff1b1f0914475ad179f60b5297392/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=uAsxQaH-D8rbf5Ax7U6iK7anSL54EbMcAKLRAIaTiAM";
         const GET_URL = "https://defaultf8d5ac988fa943558cd984f322fb0a.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/00/workflows/c827f633f43249d29cb4117e1ef25621/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=EmAb43RxVmaMh99QF6Wrn0c0OVmru25j0rbqpwl-3Ag";
         
-        // 🚨 아래에 파워 오토메이트 [하트 업데이트] URL을 꼭 다시 넣어주세요!
+        // 🚨 여기에 하트 업데이트 URL을 다시 꼭 넣어주세요!
         const LIKE_URL = "https://defaultf8d5ac988fa943558cd984f322fb0a.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/06/workflows/2593a40e7c534e718f7b3631efc1c5ba/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=uFSKF9coTDi6nkjawz24sFOgU-F1pZhnNqdnLf0s7eg"; 
 
         const allTeams = ["K-SOX팀", "개인정보보호팀", "건축TF", "경영기획팀", "구매지원팀", "글로벌소싱팀", "노사기획팀", "노사협력팀", "대외협력팀", "법무팀", "영업관리팀", "인사기획팀", "인재문화팀", "인재확보팀", "재정팀", "총무팀", "커뮤니케이션팀", "컴플라이언스팀", "투자기획팀", "한국조달팀", "회계팀"];
@@ -220,10 +220,6 @@
 
             nextBatch.forEach((item, index) => {
                 let valTitle = item.Title || findData(item, ['title', '제목']) || '제목 없음';
-                
-                // 🚨 여기서 rawTitle을 미리 저장해둡니다! (하트 업데이트할 때 원본 암호를 보내기 위함)
-                const rawTitle = valTitle; 
-                
                 let valTeam = findData(item, ['team', '팀', '소속']);
                 let valAuthor = findData(item, ['author', '작성자', '이름', 'name']);
                 const valImage = findData(item, ['image', '사진', '그림', 'base64', 'imagedata']);
@@ -267,6 +263,9 @@
                 const heartColor = isLiked ? 'text-rose-500' : 'text-slate-400';
                 const heartIcon = isLiked ? 'fa-solid fa-heart scale-125' : 'fa-solid fa-heart';
                 
+                // 🚨 2중 안전장치: 암호(팀명|이름)가 완벽하게 조립된 100% 안전한 제목 만들기!
+                const safeReconstructedTitle = `[${finalTeam}|${finalAuthor}] ${finalTitle}`;
+
                 const html = `
                     <div class="bg-white border rounded-2xl shadow-md p-4 flex flex-col relative group">
                         <div class="export-target bg-white rounded-xl pb-2 flex flex-col items-center">
@@ -282,8 +281,8 @@
                             </div>
                         </div>
                         <div class="mt-4 flex justify-between items-center px-2 pt-3 border-t border-slate-100">
-                            <!-- 🚨 여기서 rawTitle(암호가 포함된 원본 제목)을 서버로 보내도록 수정 완료! -->
-                            <button onclick="likeAction(this, '${valId}', '${escapeHtml(rawTitle).replace(/'/g, "\\'")}', ${valHeart}, '${idKey}')" class="group flex items-center gap-1.5 text-sm sm:text-base font-bold ${heartColor} hover:text-rose-500 transition-colors cursor-pointer">
+                            <!-- 🚨 안전하게 100% 복구된 제목(safeReconstructedTitle)을 서버로 전송합니다. -->
+                            <button onclick="likeAction(this, '${valId}', '${escapeHtml(safeReconstructedTitle).replace(/'/g, "\\'")}', ${valHeart}, '${idKey}')" class="group flex items-center gap-1.5 text-sm sm:text-base font-bold ${heartColor} hover:text-rose-500 transition-colors cursor-pointer">
                                 <i class="${heartIcon} transform active:scale-125 transition-transform"></i> 
                                 <span class="like-cnt text-slate-600 group-hover:text-rose-500">${valHeart}</span>
                             </button>
@@ -304,7 +303,7 @@
             else { loadMoreBtn.classList.remove('hidden'); loadMoreBtn.classList.add('flex'); }
         }
 
-        async function likeAction(btn, id, rawTitle, currentServerLikes, idKey) {
+        async function likeAction(btn, id, reconstructedTitle, currentServerLikes, idKey) {
             const span = btn.querySelector('.like-cnt');
             const icon = btn.querySelector('i');
             const isCurrentlyLiked = btn.classList.contains('text-rose-500'); 
@@ -333,8 +332,8 @@
                 fetch(LIKE_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    // 🚨 이제 안전하게 괄호 암호가 포함된 원본 제목(rawTitle)으로 업데이트합니다!
-                    body: JSON.stringify({ id: parseInt(id), title: rawTitle, heartCount: newLikes })
+                    // 🚨 이제 파워 오토메이트가 제목을 덮어쓰더라도 절대 깨지지 않는 완벽한 암호 제목을 쏴줍니다.
+                    body: JSON.stringify({ id: parseInt(id), title: reconstructedTitle, heartCount: newLikes })
                 });
             } catch (e) { console.error("하트 서버 전송 실패:", e); }
         }
