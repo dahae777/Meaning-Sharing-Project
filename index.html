@@ -106,7 +106,6 @@
                                 전시 후에는 <strong>수정/삭제가 불가</strong>하니 수정이 필요할 경우 좌측 폼을 다시 입력하고 생성해주세요.
                             </p>
                         </div>
-
                     </div>
                     
                     <div id="loadingOverlay" class="absolute inset-0 bg-white/90 z-20 hidden flex-col items-center justify-center">
@@ -142,7 +141,7 @@
         const POST_URL = "https://defaultf8d5ac988fa943558cd984f322fb0a.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/11/workflows/8fdff1b1f0914475ad179f60b5297392/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=uAsxQaH-D8rbf5Ax7U6iK7anSL54EbMcAKLRAIaTiAM";
         const GET_URL = "https://defaultf8d5ac988fa943558cd984f322fb0a.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/00/workflows/c827f633f43249d29cb4117e1ef25621/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=EmAb43RxVmaMh99QF6Wrn0c0OVmru25j0rbqpwl-3Ag";
         
-        // 🚨 2단계에서 만든 파워 오토메이트 URL을 아래 따옴표 안에 꼭 붙여넣어주세요!
+        // 🚨 여기에 파워 오토메이트 [하트 업데이트] URL을 꼭 붙여넣어주세요!
         const LIKE_URL = "https://defaultf8d5ac988fa943558cd984f322fb0a.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/06/workflows/2593a40e7c534e718f7b3631efc1c5ba/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=uFSKF9coTDi6nkjawz24sFOgU-F1pZhnNqdnLf0s7eg"; 
 
         const allTeams = ["K-SOX팀", "개인정보보호팀", "건축TF", "경영기획팀", "구매지원팀", "글로벌소싱팀", "노사기획팀", "노사협력팀", "대외협력팀", "법무팀", "영업관리팀", "인사기획팀", "인재문화팀", "인재확보팀", "재정팀", "총무팀", "커뮤니케이션팀", "컴플라이언스팀", "투자기획팀", "한국조달팀", "회계팀"];
@@ -153,7 +152,6 @@
             allTeams.sort().forEach(team => { const option = document.createElement('option'); option.value = team; option.textContent = team; teamSelect.appendChild(option); });
             
             setupMaxLengthWarnings();
-            
             renderParticipationModal(); 
             loadGallery(); 
         }
@@ -226,7 +224,6 @@
                 let valAuthor = findData(item, ['author', '작성자', '이름', 'name']);
                 const valImage = findData(item, ['image', '사진', '그림', 'base64', 'imagedata']);
                 
-                // 🚨 서버에서 ID와 HeartCount 추출
                 let valId = item.ID || item.Id || item.id;
                 let valHeart = parseInt(item.HeartCount || 0);
 
@@ -272,9 +269,9 @@
                             </div>
                         </div>
                         <div class="mt-4 flex justify-between items-center px-2 pt-3 border-t border-slate-100">
-                            <!-- 🚨 전사 동기화 하트 전송 함수 연결 -->
-                            <button onclick="likeAction(this, '${valId}', '${escapeHtml(finalTitle).replace(/'/g, "\\'")}', ${valHeart}, '${idKey}')" class="group flex items-center gap-1.5 text-sm sm:text-base font-bold ${heartColor} hover:text-rose-500 transition-colors">
-                                <i class="${heartIcon} transform group-active:scale-125 transition-transform"></i> 
+                            <!-- 🚨 좋아요 / 좋아요 취소가 자유롭게 되도록 로직 수정 -->
+                            <button onclick="likeAction(this, '${valId}', '${escapeHtml(finalTitle).replace(/'/g, "\\'")}', ${valHeart}, '${idKey}')" class="group flex items-center gap-1.5 text-sm sm:text-base font-bold ${heartColor} hover:text-rose-500 transition-colors cursor-pointer">
+                                <i class="${heartIcon} transform active:scale-125 transition-transform"></i> 
                                 <span class="like-cnt text-slate-600 group-hover:text-rose-500">${valHeart}</span>
                             </button>
                             <div class="flex gap-3">
@@ -294,22 +291,33 @@
             else { loadMoreBtn.classList.remove('hidden'); loadMoreBtn.classList.add('flex'); }
         }
 
-        // 🚨 하트 클릭 시 실시간 서버 업데이트 함수
+        // 🚨 자유로운 하트 토글(On/Off) 로직으로 완벽 업그레이드!
         async function likeAction(btn, id, title, currentServerLikes, idKey) {
-            if(btn.classList.contains('text-rose-500')) return; // 이미 누른 경우 중복 방지
-
             const span = btn.querySelector('.like-cnt');
             const icon = btn.querySelector('i');
-            const newLikes = parseInt(currentServerLikes) + 1;
+            const isCurrentlyLiked = btn.classList.contains('text-rose-500'); // 현재 상태 확인
             
-            // 1. 클릭 즉시 화면 숫자부터 올리기 (기다림 없는 빠른 반응)
-            span.textContent = newLikes;
-            btn.classList.add('text-rose-500');
-            btn.classList.remove('text-slate-400');
-            icon.classList.add('scale-125');
-            localStorage.setItem('liked_' + idKey, 'true');
+            let newLikes;
+            
+            if (!isCurrentlyLiked) {
+                // 하트 누르기 (+1)
+                newLikes = parseInt(span.textContent) + 1;
+                btn.classList.add('text-rose-500');
+                btn.classList.remove('text-slate-400');
+                icon.classList.add('scale-125');
+                localStorage.setItem('liked_' + idKey, 'true');
+            } else {
+                // 하트 취소하기 (-1)
+                newLikes = parseInt(span.textContent) - 1;
+                if(newLikes < 0) newLikes = 0; // 마이너스 방지
+                btn.classList.remove('text-rose-500');
+                btn.classList.add('text-slate-400');
+                icon.classList.remove('scale-125');
+                localStorage.removeItem('liked_' + idKey);
+            }
+            
+            span.textContent = newLikes; // 화면 즉시 업데이트
 
-            // 2. 파워 오토메이트 서버로 업데이트 요청 전송
             try {
                 if(!LIKE_URL || LIKE_URL.trim() === "") return; 
                 fetch(LIKE_URL, {
